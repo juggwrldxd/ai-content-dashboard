@@ -1,0 +1,66 @@
+{
+  "model": "annie",
+  "persona": "College Girl / Insta Baddie \u2014 19, arts student, lives in LA, posts fit checks and skincare. Sweet but flirty energy.",
+  "date": "2026-06-03",
+  "ideas": [
+    {
+      "id": "annie_2026-06-03_1",
+      "model": "annie",
+      "date": "2026-06-03",
+      "image_reference": "annie/annie_20260603_01.png",
+      "image_description": "A beach day shot with confidence boost energy",
+      "caption": "learning to love every curve. you should too \ud83d\udc8b",
+      "hashtags": [
+        "#fitcheck",
+        "#ootd",
+        "#collegegirl",
+        "#skincare"
+      ],
+      "best_platform": "Telegram",
+      "best_time": "09:00 AM UTC",
+      "caption_style": "confidence boost",
+      "vibe": "beach day",
+      "generated_at": "2026-06-03T10:40:48.259382Z"
+    },
+    {
+      "id": "annie_2026-06-03_2",
+      "model": "annie",
+      "date": "2026-06-03",
+      "image_reference": "annie/annie_20260603_02.png",
+      "image_description": "A gym mirror selfie shot with late night thoughts energy",
+      "caption": "it's 2am and i'm thinking about\u2026 you?",
+      "hashtags": [
+        "#hotgirlsummer",
+        "#selfie",
+        "#glowup",
+        "#lifestyle"
+      ],
+      "best_platform": "Telegram",
+      "best_time": "09:00 AM UTC",
+      "caption_style": "late night thoughts",
+      "vibe": "gym mirror selfie",
+      "generated_at": "2026-06-03T10:40:48.259414Z"
+    },
+    {
+      "id": "annie_2026-06-03_3",
+      "model": "annie",
+      "date": "2026-06-03",
+      "image_reference": "annie/annie_20260603_03.png",
+      "image_description": "A gym mirror selfie shot with late night thoughts energy",
+      "caption": "it's 2am and i'm thinking about\u2026 you?",
+      "hashtags": [
+        "#skincare",
+        "#hotgirlsummer",
+        "#collegegirl",
+        "#fitcheck"
+      ],
+      "best_platform": "Telegram",
+      "best_time": "12:00 PM UTC",
+      "caption_style": "late night thoughts",
+      "vibe": "gym mirror selfie",
+      "generated_at": "2026-06-03T10:40:48.259424Z"
+    }
+  ],
+  "generated_at": "2026-06-03T10:40:48.259432Z",
+  "mode": "placeholder"
+}

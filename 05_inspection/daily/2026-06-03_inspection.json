@@ -1,0 +1,35 @@
+{
+  "date": "2026-06-03",
+  "generated_at": "2026-06-03T10:40:48.283123Z",
+  "customers": {
+    "total_vip_members": 0,
+    "vip_history_count": 0,
+    "new_members_today": 0,
+    "flagged_accounts": 0,
+    "flagged_details": []
+  },
+  "revenue": {
+    "revenue_today": 0.0,
+    "revenue_week": 0.0,
+    "payments_today": 0,
+    "payments_week": 0,
+    "payments_today_details": [],
+    "payments_week_details": []
+  },
+  "analytics": {
+    "followers": 0,
+    "revenue_today_analytics": 0,
+    "revenue_week_analytics": 0,
+    "posts_today": 0,
+    "vip_members_analytics": 0,
+    "last_updated": "never"
+  },
+  "summary": {
+    "total_vip_members": 0,
+    "new_members_today": 0,
+    "flagged_accounts": 0,
+    "revenue_today_usd": 0.0,
+    "revenue_week_usd": 0.0,
+    "payments_today": 0
+  }
+}

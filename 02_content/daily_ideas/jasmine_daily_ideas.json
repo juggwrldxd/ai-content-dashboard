@@ -1,0 +1,66 @@
+{
+  "model": "jasmine",
+  "persona": "Alternative / Tattoo Baddie \u2014 21, barista, punk vibes. Dark aesthetic, piercings, edgy style. Cool and mysterious.",
+  "date": "2026-06-03",
+  "ideas": [
+    {
+      "id": "jasmine_2026-06-03_1",
+      "model": "jasmine",
+      "date": "2026-06-03",
+      "image_reference": "jasmine/jasmine_20260603_01.png",
+      "image_description": "A band tee OOTD shot with sarcastic energy",
+      "caption": "oh you're into me? how original \ud83d\ude44",
+      "hashtags": [
+        "#alternative",
+        "#piercings",
+        "#altgirl",
+        "#tattooedgirls"
+      ],
+      "best_platform": "X",
+      "best_time": "08:00 PM UTC",
+      "caption_style": "sarcastic",
+      "vibe": "band tee OOTD",
+      "generated_at": "2026-06-03T10:40:48.259805Z"
+    },
+    {
+      "id": "jasmine_2026-06-03_2",
+      "model": "jasmine",
+      "date": "2026-06-03",
+      "image_reference": "jasmine/jasmine_20260603_02.png",
+      "image_description": "A tattoo reveal shot with sarcastic energy",
+      "caption": "oh you're into me? how original \ud83d\ude44",
+      "hashtags": [
+        "#tattooedgirls",
+        "#rebel",
+        "#alternative",
+        "#goth"
+      ],
+      "best_platform": "Telegram",
+      "best_time": "12:00 PM UTC",
+      "caption_style": "sarcastic",
+      "vibe": "tattoo reveal",
+      "generated_at": "2026-06-03T10:40:48.259814Z"
+    },
+    {
+      "id": "jasmine_2026-06-03_3",
+      "model": "jasmine",
+      "date": "2026-06-03",
+      "image_reference": "jasmine/jasmine_20260603_03.png",
+      "image_description": "A rainy street shot with anti-mainstream energy",
+      "caption": "basic is boring. glad you found me instead. \ud83e\udd87",
+      "hashtags": [
+        "#piercings",
+        "#altgirl",
+        "#alternative",
+        "#tattooedgirls"
+      ],
+      "best_platform": "X",
+      "best_time": "06:00 PM UTC",
+      "caption_style": "anti-mainstream",
+      "vibe": "rainy street",
+      "generated_at": "2026-06-03T10:40:48.259819Z"
+    }
+  ],
+  "generated_at": "2026-06-03T10:40:48.259823Z",
+  "mode": "placeholder"
+}

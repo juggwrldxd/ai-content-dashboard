@@ -1,0 +1,90 @@
+# 🏢 AI Content Business — Configuration
+# ===========================================
+# Fill in your real credentials. DO NOT commit this to git.
+
+# ─── RUNPOD ───
+runpod:
+  api_key: ""          # Your RunPod API key
+  gpu_type: "NVIDIA RTX 4090"
+  spot_pricing: true   # $0.29/hr vs $0.79/hr on-demand
+  base_model: "biglust_v5"  # or "anteros_xxxl", "realvisxl_v5"
+
+# ─── MODELS ───
+models:
+  annie:
+    persona: ""        # College Girl / Insta Baddie / Fit
+    nsfw_lora: ""      # Path to NSFW LoRA .safetensors
+    sfw_lora: ""       # Path to SFW LoRA .safetensors (optional)
+    telegram:
+      main: ""         # Channel A @username
+      backup1: ""      # Channel B @username
+      backup2: ""      # Channel C @username
+      teaser: ""       # Public SFW channel @username
+    x_username: ""
+  
+  yesha:
+    persona: ""
+    nsfw_lora: ""
+    sfw_lora: ""
+    telegram:
+      main: ""
+      backup1: ""
+      backup2: ""
+      teaser: ""
+    x_username: ""
+  
+  jasmine:
+    persona: ""
+    nsfw_lora: ""
+    sfw_lora: ""
+    telegram:
+      main: ""
+      backup1: ""
+      backup2: ""
+      teaser: ""
+    x_username: ""
+
+# ─── TELEGRAM ───
+telegram:
+  bot_token: ""        # Your Telegram bot token
+  crosspost_delay: 30  # Seconds between crossposting to each channel
+
+# ─── X / TWITTER ───
+twitter:
+  method: "xurl"       # Uses xurl CLI
+
+# ─── PROXIES ───
+proxies:
+  enabled: true
+  # Residential proxies — one per X account
+  x_accounts:
+    annie: "http://user:pass@host:port"
+    yesha: "http://user:pass@host:port"
+    jasmine: "http://user:pass@host:port"
+  # Datacenter proxies — for everything else
+  datacenter: "http://user:pass@host:port"
+
+# ─── PAYMENT ───
+payment:
+  vip_price: 15        # USD — one-time VIP access
+  custom_price: 35     # USD — 10 custom photos
+  monthly_price: 15    # USD — monthly subscription
+  nowpayments_api_key: ""
+
+# ─── STORAGE ───
+storage:
+  cloud: "google_drive"
+  backup_frequency: "weekly"  # daily, weekly, monthly
+
+# ─── MODEL REVENUE SPLIT ───
+revenue_split:
+  your_share: 50       # %
+  model_share: 50      # %
+
+# ─── BATCH SETTINGS ───
+batch:
+  images_per_batch: 50
+  nsfw_base_model: "sd_xl_biglust_v5"
+  sfw_base_model: "realvisxl_v5"
+  auto_strip_metadata: true
+  auto_reject_threshold: 0.9  # Face consistency score

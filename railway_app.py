@@ -14,10 +14,13 @@ def get_drive():
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
     import urllib.request
-    # Read token from env or auth file
-    token_path = os.environ.get("GOOGLE_TOKEN_PATH", str(Path.home() / ".hermes" / "google_token.json"))
-    with open(token_path) as f:
-        creds = Credentials.from_authorized_user_info(json.load(f))
+    token_json = os.environ.get("GOOGLE_TOKEN_JSON")
+    if token_json:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json))
+    else:
+        token_path = os.environ.get("GOOGLE_TOKEN_PATH", str(Path.home() / ".hermes" / "google_token.json"))
+        with open(token_path) as f:
+            creds = Credentials.from_authorized_user_info(json.load(f))
     return build("drive", "v3", credentials=creds)
 
 def get_or_create_folder(service, name):

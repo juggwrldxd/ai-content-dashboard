@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Content Business — v2 UI Concept</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0a0a0f; color: #e0e0e0; padding: 20px; }
+  .container { max-width: 1400px; margin: 0 auto; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 24px; border-bottom: 1px solid #1e1e2e; margin-bottom: 24px; }
+  .logo { font-size: 20px; font-weight: 700; color: #fff; }
+  .logo span { color: #a855f7; }
+  .nav { display: flex; gap: 20px; align-items: center; }
+  .nav a { color: #888; text-decoration: none; font-size: 13px; padding: 6px 0; border-bottom: 2px solid transparent; }
+  .nav a.active { color: #a855f7; border-bottom-color: #a855f7; }
+  .split-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .badge-blue { background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); }
+  .badge-orange { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+  .card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 12px; padding: 20px; }
+  .card-title { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 18px; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .grid-2-equal { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  @media (max-width: 1000px) { .grid-4, .grid-3, .grid-2, .grid-2-equal { grid-template-columns: 1fr; } }
+
+  .stat { text-align: center; }
+  .stat-value { font-size: 24px; font-weight: 700; color: #fff; }
+  .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+  .stat-change { font-size: 10px; margin-top: 4px; }
+  .stat-change.warn { color: #f59e0b; }
+  .stat-change.neutral { color: #888; }
+
+  .model-card { padding: 14px 0; border-bottom: 1px solid #14141e; }
+  .model-card:first-child { padding-top: 0; }
+  .model-card:last-child { border-bottom: none; padding-bottom: 0; }
+  .model-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .model-name { font-weight: 700; color: #fff; font-size: 15px; }
+  .model-rev { font-size: 12px; color: #888; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+  .badge-yellow { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+  .badge-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+  .badge-gray { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+  .badge-purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+  .progress-bar { background: #1e1e2e; border-radius: 10px; height: 6px; overflow: hidden; margin: 6px 0; }
+  .progress-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #a855f7, #7c3aed); }
+  .progress-fill.yellow { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; padding: 6px 10px; border-bottom: 1px solid #1e1e2e; }
+  td { padding: 8px 10px; font-size: 12px; border-bottom: 1px solid #14141e; }
+  td:first-child { font-weight: 600; color: #fff; }
+
+  .btn { padding: 6px 14px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: #a855f7; color: #fff; }
+  .btn-secondary { background: #1e1e2e; color: #fff; border: 1px solid #333; }
+  .btn-small { padding: 4px 8px; font-size: 10px; }
+  .btn-green { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+  .btn-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  .pipeline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .pipe-step { background: #14141e; border: 1px solid #1e1e2e; border-radius: 8px; padding: 10px 14px; text-align: center; flex: 1; min-width: 90px; }
+  .pipe-step .icon { font-size: 18px; }
+  .pipe-step .label { font-size: 10px; color: #888; margin-top: 4px; }
+  .pipe-step .status { font-size: 10px; margin-top: 2px; font-weight: 600; }
+  .pipe-arrow { color: #333; font-size: 14px; }
+
+  .tag { display: inline-block; background: #1e1e2e; padding: 2px 7px; border-radius: 4px; font-size: 10px; color: #888; margin-right: 3px; margin-bottom: 3px; }
+
+  .task-item { padding: 8px 0; border-bottom: 1px solid #14141e; display: flex; gap: 10px; align-items: center; font-size: 12px; }
+  .task-item:last-child { border-bottom: none; }
+
+  .section-divider { border: none; border-top: 1px solid #1e1e2e; margin: 24px 0; }
+  .section-label { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-label span { font-size: 11px; color: #666; font-weight: 400; }
+
+  .caption-preview { background: #14141e; border: 1px solid #1e1e2e; border-radius: 8px; padding: 10px; font-size: 11px; color: #aaa; margin-bottom: 8px; }
+  .caption-preview .cap-tags { color: #6366f1; }
+  .caption-preview .cap-time { color: #666; font-size: 10px; }
+
+  .platform-icons { display: flex; gap: 4px; }
+  .platform-icons span { font-size: 14px; }
+
+  .rev-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid #14141e; }
+  .rev-row:last-child { border-bottom: none; }
+  .rev-label { color: #888; }
+  .rev-value { color: #10b981; font-weight: 600; }
+
+  .scrape-item { padding: 8px 0; border-bottom: 1px solid #14141e; display: flex; justify-content: space-between; align-items: center; }
+  .scrape-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="logo">AI <span>Content</span> Business</div>
+  <div class="nav">
+    <a href="#" class="active">Dashboard</a>
+    <a href="#">Gallery</a>
+    <a href="#">Models</a>
+    <a href="#">Pipeline</a>
+    <a href="#">Scraping</a>
+    <a href="#">Revenue</a>
+    <a href="#">Accounts</a>
+    <span class="split-badge badge-blue">🤖 Agent handles: LoRA, gen, validation, scraping, captions</span>
+    <span class="split-badge badge-orange">👤 You handle: posting, DMs, payments, warmup</span>
+  </div>
+</div>
+
+<!-- ===== ROW 1: STATS ===== -->
+<div class="grid-4">
+  <div class="card stat">
+    <div class="stat-value">$47</div>
+    <div class="stat-label">Revenue This Month</div>
+    <div class="stat-change neutral">3 sales — all manual entry</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-value">8</div>
+    <div class="stat-label">Total VIP Members</div>
+    <div class="stat-change neutral">+2 this week</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-value">34</div>
+    <div class="stat-label">Images Ready</div>
+    <div class="stat-change warn">⚠ Annie: 12 left (6 days)</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-value">287</div>
+    <div class="stat-label">Total X Followers</div>
+    <div class="stat-change neutral">Across 3 accounts</div>
+  </div>
+</div>
+
+<!-- ===== ROW 2: MODELS ===== -->
+<div class="grid-3">
+
+  <!-- Annie -->
+  <div class="card">
+    <div class="card-title">Annie <span class="badge badge-green">Active</span> <span class="badge badge-gray">College Girl</span></div>
+    <div style="font-size: 11px; color: #888; margin-bottom: 10px;">
+      <div>LoRA: ✅ v1.2 (BigLust NSFW)</div>
+      <div>12 images ready · $12 this month</div>
+      <div style="margin-top: 4px;"><span class="tag">X</span><span class="tag">Telegram VIP</span><span class="tag">Telegram Teaser</span><span class="tag">Reddit</span><span class="tag">OkCupid</span></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width: 55%;"></div></div>
+    <div style="font-size: 10px; color: #666; margin: 4px 0 8px;">Content used: 55% — ~6 days left</div>
+    <div style="font-size: 11px; color: #888;">
+      📊 Scraping: 12 target accounts tracked<br>
+      🎭 Mimic: College Girl vibe — likes #ootd, #bored, #college<br>
+      ✍️ Caption style: Sweet, shy, flirty
+    </div>
+    <div style="margin-top: 10px;">
+      <button class="btn btn-secondary btn-small">📸 New Batch</button>
+      <button class="btn btn-secondary btn-small">🎭 Update Mimic Profile</button>
+    </div>
+  </div>
+
+  <!-- Yesha -->
+  <div class="card">
+    <div class="card-title">Yesha <span class="badge badge-green">Active</span> <span class="badge badge-gray">Insta Baddie</span></div>
+    <div style="font-size: 11px; color: #888; margin-bottom: 10px;">
+      <div>LoRA: ✅ v1.5 (BigLust NSFW)</div>
+      <div>18 images ready · $28 this month</div>
+      <div style="margin-top: 4px;"><span class="tag">X</span><span class="tag">Telegram VIP</span><span class="tag">Telegram Teaser</span><span class="tag">Reddit</span><span class="tag">Badoo</span></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width: 25%;"></div></div>
+    <div style="font-size: 10px; color: #666; margin: 4px 0 8px;">Content used: 25% — ~9 days left</div>
+    <div style="font-size: 11px; color: #888;">
+      📊 Scraping: 18 target accounts tracked<br>
+      🎭 Mimic: Luxury vibe — likes #baddie, #dubai, #luxury<br>
+      ✍️ Caption style: Spoiled, confident, flirty
+    </div>
+    <div style="margin-top: 10px;">
+      <button class="btn btn-secondary btn-small">📸 New Batch</button>
+      <button class="btn btn-secondary btn-small">🎭 Update Mimic Profile</button>
+    </div>
+  </div>
+
+  <!-- Jasmine + Add Model -->
+  <div class="card">
+    <div class="card-title">Jasmine <span class="badge badge-yellow">Setup</span> <span class="badge badge-gray">Fit / Athletic</span></div>
+    <div style="font-size: 11px; color: #888; margin-bottom: 10px;">
+      <div>LoRA: ⏳ Not trained</div>
+      <div>0 images · $0</div>
+      <div style="margin-top: 4px;"><span class="tag">X (warming)</span></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width: 0%;"></div></div>
+    <div style="font-size: 10px; color: #666; margin: 4px 0 8px;">Waiting: 0/15 NSFW photos received</div>
+    <div style="font-size: 11px; color: #888;">
+      📊 Scraping: Not started<br>
+      🎭 Mimic: Not configured<br>
+      ✍️ Caption style: Not configured
+    </div>
+    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #14141e; text-align: center;">
+      <button class="btn btn-primary">＋ Add New Model</button>
+      <div style="font-size: 10px; color: #666; margin-top: 6px;">Name · Persona type · Photo source</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ROW 3: AGENT AUTOMATION (left) + YOU HANDLE (right) ===== -->
+<hr class="section-divider">
+
+<div class="grid-2-equal">
+
+  <!-- WHAT AGENT HANDLES -->
+  <div class="card">
+    <div class="card-title" style="color: #6366f1;">🤖 Agent Handles — Automated</div>
+    
+    <div style="font-size: 12px; margin-bottom: 10px; color: #10b981;">● Pipeline Status <span style="color: #888; font-weight: 400;">(no input needed)</span></div>
+    
+    <div style="padding: 8px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>🎯 LoRA Training</span>
+        <span class="badge badge-green">3/3 trained</span>
+      </div>
+      <div style="font-size: 10px; color: #666;">Annie ✅ · Yesha ✅ · Jasmine ⏳ waiting photos</div>
+    </div>
+    
+    <div style="padding: 8px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>📸 Batch Generation</span>
+        <span class="badge badge-green">5 batches done</span>
+      </div>
+      <div style="font-size: 10px; color: #666;">Last run: Annie batch #3 (34 validated)</div>
+    </div>
+    
+    <div style="padding: 8px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>🔍 Image Validation</span>
+        <span class="badge badge-green">68% pass rate</span>
+      </div>
+      <div style="font-size: 10px; color: #666;">50 gen → 34 pass → 22 final (your picks)</div>
+    </div>
+
+    <div style="padding: 8px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>🧹 Metadata Stripping</span>
+        <span class="badge badge-green">All clean</span>
+      </div>
+      <div style="font-size: 10px; color: #666;">Exif + AI artifacts removed from 150 images</div>
+    </div>
+
+    <div style="padding: 8px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>📊 Scraping Target Accounts</span>
+        <span class="badge badge-green">30 accounts</span>
+      </div>
+      <div style="font-size: 10px; color: #666;">Annie: 12 · Yesha: 18 · Jasmine: 0 (not started)</div>
+    </div>
+
+    <div style="padding: 8px 0;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>✍️ Caption Generation</span>
+        <span class="badge badge-green">3 styles ready</span>
+      </div>
+      <div style="font-size: 10px; color: #666;">Sweet / Confident / Healthy — 3 ideas per day per model</div>
+    </div>
+
+    <div style="margin-top: 10px; text-align: center;">
+      <button class="btn btn-primary btn-small">▶️ Run All Pending Tasks</button>
+      <button class="btn btn-secondary btn-small">📋 View Full Pipeline</button>
+    </div>
+  </div>
+
+  <!-- WHAT YOU HANDLE -->
+  <div class="card">
+    <div class="card-title" style="color: #f59e0b;">👤 You Handle — Manual Only</div>
+    
+    <div style="font-size: 12px; margin-bottom: 10px; color: #f59e0b;">● Today's Checklist <span style="color: #888; font-weight: 400;">(check off as you go)</span></div>
+
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #fff;">Post 2 Annie images to X + Telegram</span>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #fff;">Post 2 Yesha images to X + Telegram</span>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #666;">Warmup Jasmine X (Day 3) — like/follow/reply</span>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #666;">Reply to DMs (X + Telegram + dating apps)</span>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #666;">Enter revenue from today's chats → click below</span>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #666;">DM Jasmine model — request 15 NSFW photos</span>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <span style="color: #666;">Post 1 Reddit post (Annie or Yesha)</span>
+    </div>
+
+    <div style="margin-top: 10px;">
+      <button class="btn btn-green btn-small">💰 Add Revenue Entry</button>
+      <button class="btn btn-secondary btn-small">✍️ View Today's Captions</button>
+    </div>
+
+    <div style="margin-top: 14px; background: #14141e; border-radius: 8px; padding: 10px;">
+      <div style="font-size: 11px; font-weight: 600; color: #f59e0b; margin-bottom: 6px;">⚠️ Evasion Reminders</div>
+      <div style="font-size: 10px; color: #888;">• Post max 3x/day per model per platform</div>
+      <div style="font-size: 10px; color: #888;">• Never post same image on X + Reddit same day</div>
+      <div style="font-size: 10px; color: #888;">• No NSFW on X or Reddit — Telegram only</div>
+      <div style="font-size: 10px; color: #888;">• Strip metadata before posting (agent handles this)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ROW 4: SCRAPING + CAPTIONS + ACCOUNT MIMICKING ===== -->
+<hr class="section-divider">
+
+<div class="grid-3">
+
+  <!-- Scraping -->
+  <div class="card">
+    <div class="card-title">📊 Target Account Scraping <span class="badge badge-purple">Per model</span></div>
+    <div class="scrape-item">
+      <div><span style="color: #fff; font-size: 12px;">Annie — College Girl niche</span><br><span style="font-size: 10px; color: #888;">12 accounts · Last scraped 2 days ago</span></div>
+      <button class="btn btn-secondary btn-small">↻ Refresh</button>
+    </div>
+    <div class="scrape-item">
+      <div><span style="color: #fff; font-size: 12px;">Yesha — Baddie / Luxury niche</span><br><span style="font-size: 10px; color: #888;">18 accounts · Last scraped 3 days ago</span></div>
+      <button class="btn btn-secondary btn-small">↻ Refresh</button>
+    </div>
+    <div class="scrape-item">
+      <div><span style="color: #666; font-size: 12px;">Jasmine — Fit / Athletic niche</span><br><span style="font-size: 10px; color: #666;">Not started — setup when LoRA trains</span></div>
+      <button class="btn btn-secondary btn-small" disabled>↻ Wait</button>
+    </div>
+    <div style="margin-top: 10px; font-size: 10px; color: #888;">
+      Agent scrapes: top posts, hashtags, captions, engagement rates.<br>
+      Updates weekly. You review and pick what fits your vibe.
+    </div>
+  </div>
+
+  <!-- Caption Generation -->
+  <div class="card">
+    <div class="card-title">✍️ Caption Generation <span class="badge badge-purple">Per model per day</span></div>
+    
+    <div style="font-size: 11px; color: #f59e0b; margin-bottom: 8px;">Today's suggestions:</div>
+
+    <div class="caption-preview">
+      <div><strong style="color: #fff;">Annie</strong> · Sweet vibe</div>
+      <div style="margin-top: 4px;">"bored in class again... someone save me 🥱"</div>
+      <div class="cap-tags" style="margin-top: 2px;">#collegegirl #bored #studymotivation</div>
+      <div class="cap-time">Best for: X (2PM Ghana) or Reddit r/selfie</div>
+    </div>
+
+    <div class="caption-preview">
+      <div><strong style="color: #fff;">Yesha</strong> · Confident vibe</div>
+      <div style="margin-top: 4px;">"who said luxury isn't for everyone? 💅"</div>
+      <div class="cap-tags" style="margin-top: 2px;">#baddie #luxury #dubailife</div>
+      <div class="cap-time">Best for: X (8PM Ghana) or Telegram teaser</div>
+    </div>
+
+    <div class="caption-preview">
+      <div><strong style="color: #fff;">Jasmine</strong> · Healthy vibe (not active)</div>
+      <div style="margin-top: 4px; color: #666;">No captions generated — LoRA not trained</div>
+    </div>
+
+    <div style="margin-top: 8px;">
+      <button class="btn btn-secondary btn-small">↻ Generate Fresh Ideas</button>
+      <button class="btn btn-secondary btn-small">📋 Browse All Caption Styles</button>
+    </div>
+  </div>
+
+  <!-- Account Mimicking -->
+  <div class="card">
+    <div class="card-title">🎭 Account Mimicking Profiles <span class="badge badge-purple">Per platform</span></div>
+    
+    <div style="font-size: 11px; color: #888; margin-bottom: 8px;">This tells the agent how to train new accounts to look real. You set the vibe, agent generates the behavior.</div>
+
+    <div style="padding: 10px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: #fff; font-size: 12px;">Annie — X Account</span>
+        <span class="badge badge-green">Mimicking</span>
+      </div>
+      <div style="font-size: 10px; color: #888; margin-top: 4px;">
+        Likes: college life, fashion, pets<br>
+        Follows: 20 similar accounts (suggested by agent)<br>
+        Comments: "love this" "same vibe" "gorgeous"<br>
+        Post times: 2PM, 8PM Ghana
+      </div>
+    </div>
+
+    <div style="padding: 10px 0; border-bottom: 1px solid #14141e;">
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: #fff; font-size: 12px;">Yesha — X Account</span>
+        <span class="badge badge-green">Mimicking</span>
+      </div>
+      <div style="font-size: 10px; color: #888; margin-top: 4px;">
+        Likes: luxury, travel, fashion, cars<br>
+        Follows: Dubai influencers, luxury brands<br>
+        Comments: "need this" "goals" "slay"<br>
+        Post times: 6PM, 10PM Ghana
+      </div>
+    </div>
+
+    <div style="padding: 10px 0;">
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: #666; font-size: 12px;">Jasmine — X Account</span>
+        <span class="badge badge-yellow">Warming (Day 3)</span>
+      </div>
+      <div style="font-size: 10px; color: #666; margin-top: 4px;">
+        Likes: fitness, gym, health food (agent ready)<br>
+        Follows: fitness influencers (ready to suggest)<br>
+        Mimicking will activate Day 8 after warmup
+      </div>
+    </div>
+
+    <div style="margin-top: 8px;">
+      <button class="btn btn-secondary btn-small">🎭 Configure Mimic Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ROW 5: ACCOUNTS TABLE (ALL PLATFORMS) ===== -->
+<hr class="section-divider">
+
+<div class="card" style="margin-bottom: 20px;">
+  <div class="section-label">All Accounts <span>Every platform · Every model</span></div>
+  <div style="overflow-x: auto;">
+  <table>
+    <tr>
+      <th>Account</th>
+      <th>Platform</th>
+      <th>Model</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Followers / Members</th>
+      <th>Warmup</th>
+      <th>Proxy</th>
+      <th>Action</th>
+    </tr>
+    <tr>
+      <td>annie_x_primary</td>
+      <td>🔵 X</td>
+      <td>Annie</td>
+      <td>Public</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>195</td>
+      <td>✅ Done</td>
+      <td>Resi $4/mo</td>
+      <td><button class="btn btn-secondary btn-small">View</button></td>
+    </tr>
+    <tr>
+      <td>annie_vip_main</td>
+      <td>✈️ Telegram</td>
+      <td>Annie</td>
+      <td>NSFW VIP</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>12 members</td>
+      <td>✅</td>
+      <td>—</td>
+      <td><button class="btn btn-secondary btn-small">Open</button></td>
+    </tr>
+    <tr>
+      <td>annie_vip_backup1</td>
+      <td>✈️ Telegram</td>
+      <td>Annie</td>
+      <td>NSFW Backup</td>
+      <td><span class="badge badge-gray">Standby</span></td>
+      <td>0</td>
+      <td>✅</td>
+      <td>—</td>
+      <td><button class="btn btn-secondary btn-small">Open</button></td>
+    </tr>
+    <tr>
+      <td>annie_teaser</td>
+      <td>✈️ Telegram</td>
+      <td>Annie</td>
+      <td>SFW Public</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>8 members</td>
+      <td>✅</td>
+      <td>—</td>
+      <td><button class="btn btn-secondary btn-small">Open</button></td>
+    </tr>
+    <tr>
+      <td>annie_reddit_1</td>
+      <td>🔴 Reddit</td>
+      <td>Annie</td>
+      <td>SFW</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>—</td>
+      <td>✅</td>
+      <td>DC $0</td>
+      <td><button class="btn btn-secondary btn-small">View</button></td>
+    </tr>
+    <tr>
+      <td>annie_okcupid_usa</td>
+      <td>💕 OkCupid</td>
+      <td>Annie</td>
+      <td>SFW Teaser</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>—</td>
+      <td>✅</td>
+      <td>DC $0</td>
+      <td><button class="btn btn-secondary btn-small">Open</button></td>
+    </tr>
+    <tr>
+      <td>yesha_x_primary</td>
+      <td>🔵 X</td>
+      <td>Yesha</td>
+      <td>Public</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>142</td>
+      <td>✅ Done</td>
+      <td>Resi $4/mo</td>
+      <td><button class="btn btn-secondary btn-small">View</button></td>
+    </tr>
+    <tr>
+      <td>yesha_vip_main</td>
+      <td>✈️ Telegram</td>
+      <td>Yesha</td>
+      <td>NSFW VIP</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>8 members</td>
+      <td>✅</td>
+      <td>—</td>
+      <td><button class="btn btn-secondary btn-small">Open</button></td>
+    </tr>
+    <tr>
+      <td>yesha_badoo_usa</td>
+      <td>💕 Badoo</td>
+      <td>Yesha</td>
+      <td>SFW Teaser</td>
+      <td><span class="badge badge-green">Active</span></td>
+      <td>—</td>
+      <td>✅</td>
+      <td>DC $0</td>
+      <td><button class="btn btn-secondary btn-small">Open</button></td>
+    </tr>
+    <tr>
+      <td>jasmine_x_primary</td>
+      <td>🔵 X</td>
+      <td>Jasmine</td>
+      <td>Public</td>
+      <td><span class="badge badge-yellow">Warming</span></td>
+      <td>12</td>
+      <td>Day 3/7</td>
+      <td>Resi $4/mo</td>
+      <td><button class="btn btn-secondary btn-small">View</button></td>
+    </tr>
+  </table>
+  </div>
+  <div style="margin-top: 10px; text-align: center;">
+    <button class="btn btn-secondary btn-small">＋ Add Account</button>
+    <button class="btn btn-secondary btn-small">📥 Import from Config</button>
+    <span style="font-size: 10px; color: #666; margin-left: 10px;">Resi = Residential proxy · DC = Datacenter proxy</span>
+  </div>
+</div>
+
+<!-- ===== ROW 6: REVENUE (MANUAL ENTRY) + ALERTS ===== -->
+<div class="grid-2">
+
+  <!-- Revenue -->
+  <div class="card">
+    <div class="card-title">💰 Revenue <span style="font-weight: 400; color: #666;">Manual entry — no auto-tracking</span></div>
+    
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+      <input type="text" placeholder="Amount (e.g. 15)" style="background: #1e1e2e; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 13px; width: 100px;">
+      <select style="background: #1e1e2e; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 12px;">
+        <option>VIP — $15</option>
+        <option>VIP — $25</option>
+        <option>Custom — $35</option>
+        <option>Custom — $50</option>
+        <option>Monthly sub — $15</option>
+        <option>Monthly sub — $20</option>
+      </select>
+      <select style="background: #1e1e2e; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 12px;">
+        <option>Annie</option>
+        <option>Yesha</option>
+        <option>Jasmine</option>
+      </select>
+      <button class="btn btn-primary btn-small">＋ Add</button>
+    </div>
+
+    <div style="font-size: 11px; color: #888; margin-bottom: 10px;">Recent entries:</div>
+    
+    <div class="rev-row">
+      <span class="rev-label">Jun 3 — Annie VIP ($15)</span>
+      <span class="rev-value">$15</span>
+    </div>
+    <div class="rev-row">
+      <span class="rev-label">Jun 2 — Yesha VIP ($25)</span>
+      <span class="rev-value">$25</span>
+    </div>
+    <div class="rev-row">
+      <span class="rev-label">Jun 1 — Annie Custom ($35)</span>
+      <span class="rev-value">$35</span>
+    </div>
+    <div class="rev-row" style="border-top: 1px solid #1e1e2e; padding-top: 10px; margin-top: 4px;">
+      <span style="font-weight: 600; color: #fff;">This Month Total</span>
+      <span style="font-weight: 700; color: #10b981;">$47</span>
+    </div>
+
+    <div style="margin-top: 10px; font-size: 11px; color: #666;">
+      <div>Model splits (50/50):</div>
+      <div>Annie owes: $12 · Yesha owes: $14 · Jasmine: $0</div>
+      <div style="margin-top: 4px;"><button class="btn btn-secondary btn-small">💰 Mark Payout Sent</button></div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="card">
+    <div class="card-title">⚠️ Alerts & Reminders</div>
+    
+    <div style="padding: 10px 0; border-bottom: 1px solid #14141e; display: flex; gap: 10px; align-items: center;">
+      <div style="width: 26px; height: 26px; background: rgba(245, 158, 11, 0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">⚠️</div>
+      <div>
+        <div style="font-size: 12px; color: #fff;">Jasmine: No NSFW photos received</div>
+        <div style="font-size: 10px; color: #666;">DM the model — need 15 photos to train LoRA</div>
+      </div>
+    </div>
+
+    <div style="padding: 10px 0; border-bottom: 1px solid #14141e; display: flex; gap: 10px; align-items: center;">
+      <div style="width: 26px; height: 26px; background: rgba(245, 158, 11, 0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">⚠️</div>
+      <div>
+        <div style="font-size: 12px; color: #fff;">Annie: 6 days of content left</div>
+        <div style="font-size: 10px; color: #666;">Generate new batch this week — 12 images remaining</div>
+      </div>
+    </div>
+
+    <div style="padding: 10px 0; display: flex; gap: 10px; align-items: center;">
+      <div style="width: 26px; height: 26px; background: rgba(16, 185, 129, 0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">💬</div>
+      <div>
+        <div style="font-size: 12px; color: #fff;">3 DMs waiting on X</div>
+        <div style="font-size: 10px; color: #666;">Annie: 1 · Yesha: 2 — reply to redirect to Telegram</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 12px; padding: 10px; background: #14141e; border-radius: 8px;">
+      <div style="font-size: 11px; font-weight: 600; color: #ef4444; margin-bottom: 4px;">🚫 Ban Prevention Checklist</div>
+      <div style="font-size: 10px; color: #888;">
+        • X: max 3 posts/day per account ✅<br>
+        • No NSFW on public platforms ✅<br>
+        • Metadata stripped (agent handles) ✅<br>
+        • 7 day warmup before posting ✅<br>
+        • Different images per platform ✅<br>
+        • Backup channels ready ✅
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; text-align: center; font-size: 11px; color: #444; padding: 16px;">
+  AI Content Business v2 — Agent handles: LoRA · gen · validation · metadata · scraping · captions · dashboard<br>
+  You handle: posting · DMs · payments · warmup · account creation · revenue entry<br>
+  Automation runs at 6AM + 7PM Ghana time. Dashboard updates live.
+</div>
+
+</div>
+</body>
+</html>
