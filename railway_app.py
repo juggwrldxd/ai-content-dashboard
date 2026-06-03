@@ -142,7 +142,8 @@ def index():
 
 # Mount dashboard HTML + static
 HERE = Path(__file__).parent
-app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
+if (HERE / "static").is_dir():
+    app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 
 def main():
     import uvicorn
