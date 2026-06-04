@@ -220,9 +220,8 @@ def add_model(model: dict):
 def index():
     html = Path(__file__).parent / "dashboard.html"
     return html.read_text() if html.exists() else "<h1>Dashboard</h1>"
-
+# Mount dashboard HTML — no static dir needed (all CSS/JS is inline)
 HERE = Path(__file__).parent
-app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 
 def main():
     import uvicorn
