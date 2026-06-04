@@ -504,7 +504,7 @@ function renderInbox() {
       <div><div style="font-size:13px;font-weight:500;color:#d4d4d8">${d.from||'?'}</div>
       <div style="font-size:11px;color:#6b6b80">"${d.preview||''}" · ${d.source||''} · ${d.time||''}</div></div>
       <div><span class="tag ${d.type==='nsfw'?'tag-red':'tag-green'}">${d.type||'sfw'}</span>
-      <button class="btn btn-ghost btn-xs">${d.action==='payment'?'💰':'${d.action||'Reply'}'}</button></div>
+      <button class="btn btn-ghost btn-xs" onclick="alert('TODO: reply to '+this.dataset.from)" data-from="${d.from||''}">${d.action==='payment'?'💰':'Reply'}</button></div>
     </div>`).join('');
 }
 
