@@ -8,276 +8,216 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,-apple-system,system-ui,sans-serif;background:#07070d;color:#d4d4d8}
 .app{display:flex;min-height:100vh}
-.side{width:240px;background:#0a0a12;border-right:1px solid #14141f;padding:20px 0;flex-shrink:0}
-@media(max-width:1000px){.side{width:70px;padding:16px 6px}.side .label,.content-type-switch span{display:none}.main{padding:16px}.side .content-type-switch{padding:0 4px}}
-.logo{font-size:17px;font-weight:700;color:#fff;padding:0 20px;margin-bottom:8px;letter-spacing:-.3px}
+.side{width:220px;background:#0a0a12;border-right:1px solid #14141f;padding:20px 0;flex-shrink:0;overflow-y:auto}
+@media(max-width:1000px){.side{width:60px;padding:12px 4px}.side .label{display:none}.main{padding:14px}}
+.logo{font-size:16px;font-weight:700;color:#fff;padding:0 18px;margin-bottom:20px;letter-spacing:-.3px}
 .logo span{color:#a855f7}
-.live-badge{font-size:9px;color:#34d399;padding:0 20px;margin-bottom:20px;letter-spacing:.5px;text-transform:uppercase}
-.content-type-switch{display:flex;gap:4px;padding:0 16px;margin:0 0 16px 0}
-.ct-btn{flex:1;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;border:1px solid transparent;transition:all .15s;background:transparent}
-.ct-btn.nsfw{color:#f87171}
-.ct-btn.nsfw.active{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);color:#fca5a5}
-.ct-btn.sfw{color:#34d399}
-.ct-btn.sfw.active{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:#6ee7b7}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;color:#6b6b80;font-size:13px;cursor:pointer;transition:all .1s;position:relative}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 18px;color:#6b6b80;font-size:13px;cursor:pointer;transition:all .1s;position:relative}
 .nav-item:hover{color:#d4d4d8;background:#0f0f1a}
 .nav-item.active{color:#a855f7;background:rgba(168,85,247,.08)}
-.nav-item.active::before{content:'';position:absolute;left:0;top:5px;bottom:5px;width:3px;background:#a855f7;border-radius:0 3px 3px 0}
-.nav-item .ico{font-size:15px;width:20px;text-align:center}
-.nav-divider{height:1px;background:#14141f;margin:10px 20px}
-.nsfw-label{color:#f87171;font-size:9px;margin-left:auto;font-weight:600;opacity:.7}
-.sfw-label{color:#34d399;font-size:9px;margin-left:auto;font-weight:600;opacity:.7}
-.main{flex:1;padding:28px 36px;max-width:1400px}
-@media(max-width:1000px){.main{padding:16px}}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:#a855f7;border-radius:0 3px 3px 0}
+.nav-item .ico{font-size:14px;width:18px;text-align:center}
+.nav-spacer{height:1px;background:#14141f;margin:8px 18px}
+.main{flex:1;padding:24px 32px;max-width:1300px}
+@media(max-width:1000px){.main{padding:14px}}
 .page{display:none}.page.active{display:block}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px}
-.top h1{font-size:22px;font-weight:600;color:#fff;letter-spacing:-.3px}
-.top h1 .type-badge{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;margin-left:8px;vertical-align:middle}
-.top h1 .type-badge.nsfw{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.2)}
-.top h1 .type-badge.sfw{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.2)}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:10px}
+.top h1{font-size:21px;font-weight:600;color:#fff;letter-spacing:-.3px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
 .pill-purple{background:rgba(168,85,247,.1);color:#a855f7;border:1px solid rgba(168,85,247,.15)}
-.pill-blue{background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.15)}
-.pill-orange{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.15)}
 .pill-green{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.15)}
+.pill-yellow{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.15)}
 .pill-red{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.15)}
 .pill-gray{background:rgba(113,113,122,.1);color:#a1a1aa;border:1px solid rgba(113,113,122,.15)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;background:transparent}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;background:transparent;font-family:inherit}
 .btn-primary{background:#a855f7;color:#fff}.btn-primary:hover{background:#9333ea}
-.btn-nsfw{background:rgba(248,113,113,.15);color:#fca5a5;border:1px solid rgba(248,113,113,.25)}.btn-nsfw:hover{background:rgba(248,113,113,.25)}
-.btn-sfw{background:rgba(52,211,153,.15);color:#6ee7b7;border:1px solid rgba(52,211,153,.25)}.btn-sfw:hover{background:rgba(52,211,153,.25)}
 .btn-ghost{color:#a1a1aa;border:1px solid #1f1f2e}.btn-ghost:hover{background:#0f0f1a;color:#d4d4d8}
-.btn-sm{padding:5px 10px;font-size:11px}.btn-xs{padding:3px 8px;font-size:10px}
-.card{background:#0c0c16;border:1px solid #14141f;border-radius:12px;padding:20px;margin-bottom:16px}
-.card-title{font-size:11px;font-weight:600;color:#6b6b80;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-.row{display:grid;gap:16px;margin-bottom:16px}
+.btn-sm{padding:5px 10px;font-size:11px}.btn-xs{padding:3px 7px;font-size:10px}
+.card{background:#0c0c16;border:1px solid #14141f;border-radius:12px;padding:18px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:600;color:#6b6b80;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.row{display:grid;gap:14px;margin-bottom:14px}
 .row-4{grid-template-columns:repeat(4,1fr)}.row-3{grid-template-columns:repeat(3,1fr)}.row-2{grid-template-columns:1fr 1fr}.row-1-2{grid-template-columns:1.4fr 1fr}
 @media(max-width:900px){.row-4,.row-3,.row-2,.row-1-2{grid-template-columns:1fr}}
-.stat{padding:16px;text-align:left}
-.stat-val{font-size:28px;font-weight:600;color:#fff;letter-spacing:-.5px}
+.stat{padding:14px;text-align:left}
+.stat-val{font-size:26px;font-weight:600;color:#fff;letter-spacing:-.5px}
 .stat-label{font-size:12px;color:#6b6b80;margin-top:2px}
-.stat-sub{font-size:11px;color:#6b6b80;margin-top:4px}
-.mc{border-bottom:1px solid #0f0f1a}
-.mc:last-child{border:none}
-.model-card{padding:16px;border-bottom:1px solid #0f0f1a}
-.model-card:first-child{padding-top:0}
-.model-card:last-child{border:none;padding-bottom:0}
-.mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.mc-name{font-size:15px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
-.mc-stats{display:flex;gap:20px;font-size:12px;color:#6b6b80;margin-bottom:6px;flex-wrap:wrap}
-.bar{height:4px;background:#14141f;border-radius:4px;overflow:hidden;margin:6px 0}
-.bar-fill{height:100%;border-radius:4px}
-.bar-purple{background:linear-gradient(90deg,#a855f7,#7c3aed)}
-.bar-red{background:linear-gradient(90deg,#f87171,#ef4444)}
-.bar-green{background:linear-gradient(90deg,#34d399,#059669)}
-.tag{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;background:#0f0f1a;color:#6b6b80;margin:2px}
-.tag-red{color:#f87171;background:rgba(248,113,113,.08)}
+.stat-sub{font-size:11px;color:#6b6b80;margin-top:3px}
+.tag{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;background:#0f0f1a;color:#6b6b80;margin:2px}
 .tag-green{color:#34d399;background:rgba(16,185,129,.08)}
 .tag-yellow{color:#fbbf24;background:rgba(245,158,11,.08)}
+.tag-red{color:#f87171;background:rgba(239,68,68,.08)}
 .tag-purple{color:#a855f7;background:rgba(168,85,247,.08)}
-.task{display:flex;gap:10px;align-items:start;padding:6px 0;font-size:13px}
-.task input{margin-top:3px;accent-color:#a855f7}
+.prio-item{padding:12px 14px;border:1px solid #1f1f2e;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.prio-item:last-child{margin-bottom:0}
+.prio-item.high{border-left:3px solid #f87171}
+.prio-item.medium{border-left:3px solid #fbbf24}
+.prio-item.low{border-left:3px solid #6b6b80}
+.model-card{padding:14px 0;border-bottom:1px solid #0f0f1a}
+.model-card:first-child{padding-top:0}
+.model-card:last-child{border:none;padding-bottom:0}
+.mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px}
+.mc-name{font-size:14px;font-weight:600;color:#fff}
+.mc-stats{display:flex;gap:16px;font-size:12px;color:#6b6b80;margin-bottom:4px;flex-wrap:wrap}
+.bar{height:4px;background:#14141f;border-radius:4px;overflow:hidden;margin:6px 0}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#a855f7,#7c3aed)}
 .f-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
-.f-group{display:flex;flex-direction:column;gap:4px}
+.f-group{display:flex;flex-direction:column;gap:3px}
 .f-group label{font-size:11px;color:#6b6b80}
-.f-control{background:#0a0a12;border:1px solid #1f1f2e;border-radius:6px;padding:7px 10px;color:#fff;font-size:12px;outline:none}
+.f-control{background:#0a0a12;border:1px solid #1f1f2e;border-radius:6px;padding:7px 10px;color:#fff;font-size:12px;outline:none;font-family:inherit}
 .f-control:focus{border-color:#a855f7}
 .f-control-sm{padding:5px 8px;font-size:11px}
+textarea.f-control{resize:vertical;min-height:60px;width:100%}
 select.f-control option{background:#0a0a12;color:#fff}
-.cap{padding:12px;background:#0a0a12;border:1px solid #1f1f2e;border-radius:8px;margin-bottom:8px}
-.cap-model{font-size:13px;font-weight:600;color:#fff}
-.cap-text{font-size:12px;color:#a1a1aa;margin:4px 0}
-.cap-tags{font-size:11px;color:#818cf8}
-.step-card{padding:14px;border:1px solid #1f1f2e;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.step-card .step-info{display:flex;align-items:center;gap:12px}
-.step-card .step-status{font-size:11px;font-weight:600}
+.step-card{padding:12px;border:1px solid #1f1f2e;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.step-info{display:flex;align-items:center;gap:10px}
+.step-status{font-size:11px;font-weight:600}
 .status-idle{color:#6b6b80}.status-running{color:#fbbf24}.status-done{color:#34d399}.status-error{color:#f87171}
-.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.gallery-item{background:#0a0a12;border:1px solid #1f1f2e;border-radius:10px;padding:60px 12px;text-align:center;color:#6b6b80;font-size:12px;cursor:pointer;transition:all .1s}
-.gallery-item:hover{border-color:#a855f7;background:#0f0f1a}
-.account-item{padding:10px 0;border-bottom:1px solid #0f0f1a;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.account-item:last-child{border:none}
-.warmup-bar{height:6px;background:#14141f;border-radius:6px;overflow:hidden;width:120px}
-.warmup-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#fbbf24,#34d399)}
-.hint{font-size:10px;color:#3a3a50;margin-top:20px;text-align:center;padding-bottom:40px}
-.toast{position:fixed;bottom:30px;right:30px;background:#0c0c16;border:1px solid #1f1f2e;border-radius:10px;padding:12px 20px;font-size:13px;color:#34d399;display:none;z-index:999;max-width:400px}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gal-item{background:#0a0a12;border:1px solid #1f1f2e;border-radius:8px;padding:50px 10px;text-align:center;color:#6b6b80;font-size:12px;cursor:pointer;transition:all .1s}
+.gal-item:hover{border-color:#a855f7;background:#0f0f1a}
+.gal-item .tag{display:block;margin-top:6px}
+.acct-item{padding:8px 0;border-bottom:1px solid #0f0f1a;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.acct-item:last-child{border:none}
+.warmup-bar{height:5px;background:#14141f;border-radius:5px;overflow:hidden;width:100px}
+.warmup-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#fbbf24,#34d399)}
+.cap-item{padding:10px 12px;background:#0a0a12;border:1px solid #1f1f2e;border-radius:8px;margin-bottom:6px}
+.cap-model{font-size:13px;font-weight:600;color:#fff}
+.cap-text{font-size:12px;color:#a1a1aa;margin:3px 0}
+.cap-tags{font-size:11px;color:#818cf8}
+.toggle-group{display:flex;gap:0;border:1px solid #1f1f2e;border-radius:8px;overflow:hidden}
+.toggle-btn{padding:6px 14px;font-size:12px;cursor:pointer;background:transparent;color:#6b6b80;border:none;font-family:inherit;transition:all .1s}
+.toggle-btn.active{background:rgba(168,85,247,.12);color:#a855f7}
+.chk-item{display:flex;gap:8px;align-items:start;padding:5px 0;font-size:13px;cursor:pointer}
+.chk-item input{margin-top:3px;accent-color:#a855f7;cursor:pointer}
+.chk-item .chk-text{color:#6b6b80;cursor:pointer}
+.chk-item.done .chk-text{color:#34d399;text-decoration:line-through}
+.scrape-field{margin-bottom:8px}
+.scrape-field label{font-size:11px;color:#6b6b80;display:block;margin-bottom:3px}
+.scrape-field input,.scrape-field textarea{background:#0a0a12;border:1px solid #1f1f2e;border-radius:6px;padding:6px 10px;color:#fff;font-size:12px;width:100%;outline:none;font-family:inherit}
+.scrape-field input:focus,.scrape-field textarea:focus{border-color:#a855f7}
+.hint{font-size:10px;color:#3a3a50;margin-top:16px;text-align:center;padding-bottom:30px}
+.toast{position:fixed;bottom:24px;right:24px;background:#0c0c16;border:1px solid #1f1f2e;border-radius:10px;padding:10px 18px;font-size:13px;color:#34d399;display:none;z-index:999;max-width:380px}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="side">
     <div class="logo">AI <span>Studio</span></div>
-    <div class="live-badge">◉ LIVE · Jugg</div>
-
-    <!-- NSFW / SFW TOGGLE -->
-    <div class="content-type-switch">
-      <div class="ct-btn nsfw active" onclick="setContentType('nsfw')">🔥 NSFW</div>
-      <div class="ct-btn sfw" onclick="setContentType('sfw')">🌸 SFW</div>
-    </div>
-
-    <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="ico">◉</span><span class="label">Dashboard</span></div>
-    <div class="nav-item" data-page="models" onclick="switchPage('models')"><span class="ico">●</span><span class="label">Models</span></div>
-    <div class="nav-item" data-page="gallery" onclick="switchPage('gallery')"><span class="ico">◆</span><span class="label">Gallery</span></div>
-    <div class="nav-divider"></div>
-    <div class="nav-item" data-page="pipeline-nsfw" onclick="switchPage('pipeline-nsfw')"><span class="ico">▶</span><span class="label">Pipeline (NSFW)</span><span class="nsfw-label">🔥</span></div>
-    <div class="nav-item" data-page="pipeline-sfw" onclick="switchPage('pipeline-sfw')"><span class="ico">▶</span><span class="label">Pipeline (SFW)</span><span class="sfw-label">🌸</span></div>
-    <div class="nav-divider"></div>
-    <div class="nav-item" data-page="scraping" onclick="switchPage('scraping')"><span class="ico">◈</span><span class="label">Scraping</span></div>
-    <div class="nav-item" data-page="captions" onclick="switchPage('captions')"><span class="ico">◇</span><span class="label">Captions</span></div>
-    <div class="nav-item" data-page="inbox" onclick="switchPage('inbox')"><span class="ico">◎</span><span class="label">Inbox</span></div>
-    <div class="nav-item" data-page="revenue" onclick="switchPage('revenue')"><span class="ico">◐</span><span class="label">Revenue</span></div>
-    <div class="nav-item" data-page="accounts" onclick="switchPage('accounts')"><span class="ico">◉</span><span class="label">Accounts</span></div>
-    <div class="nav-divider"></div>
-    <div class="nav-item" data-page="settings" onclick="switchPage('settings')"><span class="ico">⚙</span><span class="label">Settings</span></div>
+    <div class="nav-item active" data-page="analytics" onclick="switchPage('analytics')"><span class="ico">*</span><span class="label">Analytics</span></div>
+    <div class="nav-item" data-page="models" onclick="switchPage('models')"><span class="ico">~</span><span class="label">Models</span></div>
+    <div class="nav-item" data-page="gallery" onclick="switchPage('gallery')"><span class="ico">#</span><span class="label">Gallery</span></div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item" data-page="pipeline-nsfw" onclick="switchPage('pipeline-nsfw')"><span class="ico">+</span><span class="label">Pipeline NSFW</span></div>
+    <div class="nav-item" data-page="pipeline-sfw" onclick="switchPage('pipeline-sfw')"><span class="ico">=</span><span class="label">Pipeline SFW</span></div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item" data-page="scraping" onclick="switchPage('scraping')"><span class="ico">@</span><span class="label">Scraping</span></div>
+    <div class="nav-item" data-page="captions" onclick="switchPage('captions')"><span class="ico">"</span><span class="label">Captions</span></div>
+    <div class="nav-item" data-page="hub" onclick="switchPage('hub')"><span class="ico">!</span><span class="label">Hub</span></div>
+    <div class="nav-item" data-page="revenue" onclick="switchPage('revenue')"><span class="ico">$</span><span class="label">Revenue</span></div>
+    <div class="nav-item" data-page="accounts" onclick="switchPage('accounts')"><span class="ico">@</span><span class="label">Accounts</span></div>
   </div>
 
   <div class="main">
-    <!-- ════════════ DASHBOARD ════════════ -->
-    <div class="page active" id="page-dashboard">
-      <div class="top">
-        <h1>Dashboard <span class="type-badge nsfw" id="dashTypeBadge">🔥 NSFW</span></h1>
-        <div class="top-right">
-          <span class="pill pill-green">◉ System Live</span>
-          <button class="btn btn-ghost btn-sm" onclick="load()">↻ Refresh</button>
-        </div>
-      </div>
-      <div class="row row-4" id="statsRow"></div>
-      <div class="row row-1-2">
-        <div class="card"><div class="card-title" style="color:#818cf8">🤖 Agent status</div><div id="agentStatus" style="font-size:12px;color:#6b6b80"></div></div>
-        <div class="card"><div class="card-title" style="color:#fbbf24">👤 Your tasks today</div><div id="tasksList"></div></div>
-      </div>
-      <div class="card" id="modelsOverview"><div class="card-title">Model overview</div><div id="modelsOverviewBody"></div></div>
-      <div class="hint">Agent: LoRA · gen · validation · metadata · scraping · captions · inspection · You: post · DMs · payments · warmup</div>
+    <!-- ══════ ANALYTICS ══════ -->
+    <div class="page active" id="page-analytics">
+      <div class="top"><h1>Analytics</h1><button class="btn btn-ghost btn-sm" onclick="load()">Refresh</button></div>
+      <div class="row row-4" id="analyticsStats"></div>
+      <div class="card"><div class="card-title"><span>Do this next</span><span class="pill pill-purple">Prioritized</span></div><div id="priorityList"></div></div>
+      <div class="row row-3" id="analyticsModels"></div>
     </div>
 
-    <!-- ════════════ MODELS ════════════ -->
+    <!-- ══════ MODELS ══════ -->
     <div class="page" id="page-models">
-      <div class="top"><h1>Models</h1><button class="btn btn-primary btn-sm" onclick="addModel()">＋ New model</button></div>
+      <div class="top"><h1>Models</h1><button class="btn btn-primary btn-sm" onclick="showAddModel()">+ Add model</button></div>
       <div id="modelsList"></div>
       <div class="card" id="addModelForm" style="display:none">
         <div class="card-title">Add model</div>
         <div class="f-row">
           <div class="f-group"><label>Name</label><input class="f-control f-control-sm" id="newModelName" placeholder="e.g. Maya"></div>
-          <div class="f-group"><label>Persona</label><select class="f-control f-control-sm" id="newModelPersona"><option>College Girl</option><option>Insta Baddie</option><option>Fit / Athletic</option><option>Alt / Tattoo</option><option>Custom</option></select></div>
-          <div class="f-group"><label>Platforms</label><input class="f-control f-control-sm" id="newModelPlatforms" value="X,Telegram" placeholder="X,Telegram,Reddit"></div>
+          <div class="f-group"><label>Persona prompt</label><input class="f-control f-control-sm" id="newModelPersona" placeholder="College girl, 19, arts student, LA"></div>
+          <div class="f-group"><label>Platforms</label><input class="f-control f-control-sm" id="newModelPlatforms" value="X,Telegram" placeholder="X,Telegram"></div>
           <button class="btn btn-primary btn-sm" onclick="saveNewModel()">Save</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addModelForm').style.display='none'">Cancel</button>
+          <button class="btn btn-ghost btn-sm" onclick="hideAddModel()">Cancel</button>
         </div>
       </div>
     </div>
 
-    <!-- ════════════ GALLERY ════════════ -->
+    <!-- ══════ GALLERY ══════ -->
     <div class="page" id="page-gallery">
-      <div class="top"><h1>Gallery <span class="type-badge nsfw" id="galleryTypeBadge">🔥 NSFW</span></h1><div class="top-right"><select class="f-control f-control-sm" id="galleryModelFilter" onchange="renderGallery()"><option value="all">All models</option></select></div></div>
-      <div class="gallery-grid" id="galleryGrid"></div>
+      <div class="top"><h1>Gallery</h1><div class="f-row"><select class="f-control f-control-sm" id="galModelFilter" onchange="renderGallery()"><option value="all">All models</option></select><select class="f-control f-control-sm" id="galTagFilter" onchange="renderGallery()"><option value="all">All tags</option><option value="ready">Ready</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div></div>
+      <div class="gal-grid" id="galleryGrid"></div>
     </div>
 
-    <!-- ════════════ PIPELINE (NSFW) ════════════ -->
+    <!-- ══════ PIPELINE NSFW ══════ -->
     <div class="page" id="page-pipeline-nsfw">
-      <div class="top"><h1>🔥 NSFW Pipeline</h1><span class="pill pill-red">NSFW content · Telegram VIP only</span></div>
-      <div id="pipelineNsfwContent"></div>
+      <div class="top"><h1>Pipeline NSFW</h1></div>
+      <div id="pipelineNsfw"></div>
     </div>
 
-    <!-- ════════════ PIPELINE (SFW) ════════════ -->
+    <!-- ══════ PIPELINE SFW ══════ -->
     <div class="page" id="page-pipeline-sfw">
-      <div class="top"><h1>🌸 SFW Pipeline</h1><span class="pill pill-green">SFW content · X/Reddit/Dating apps</span></div>
-      <div id="pipelineSfwContent"></div>
+      <div class="top"><h1>Pipeline SFW</h1></div>
+      <div id="pipelineSfw"></div>
     </div>
 
-    <!-- ════════════ SCRAPING ════════════ -->
+    <!-- ══════ SCRAPING ══════ -->
     <div class="page" id="page-scraping">
-      <div class="top"><h1>📡 Scraping</h1><button class="btn btn-ghost btn-sm" onclick="alert('Configure target accounts in Settings')">⚙ Configure targets</button></div>
-      <div class="card"><div class="card-title">Target accounts per model</div><div id="scrapingContent"></div></div>
+      <div class="top"><h1>Scraping</h1></div>
+      <div id="scrapingContent"></div>
     </div>
 
-    <!-- ════════════ CAPTIONS ════════════ -->
+    <!-- ══════ CAPTIONS ══════ -->
     <div class="page" id="page-captions">
-      <div class="top"><h1>✍️ Captions</h1><button class="btn btn-sm" id="captionTypeToggle" onclick="toggleCaptionType()">Switch to SFW 🌸</button></div>
+      <div class="top"><h1>Captions</h1></div>
       <div id="captionsContent"></div>
     </div>
 
-    <!-- ════════════ INBOX ════════════ -->
-    <div class="page" id="page-inbox">
-      <div class="top"><h1>💬 Inbox</h1><div class="top-right"><select class="f-control f-control-sm" id="inboxFilter" onchange="renderInbox()"><option value="all">All</option><option value="nsfw">NSFW</option><option value="sfw">SFW</option></select></div></div>
-      <div id="inboxContent"></div>
+    <!-- ══════ HUB ══════ -->
+    <div class="page" id="page-hub">
+      <div class="top"><h1>Hub</h1></div>
+      <div class="row row-1-2">
+        <div class="card"><div class="card-title">Daily reminders</div><div id="reminderList"></div></div>
+        <div class="card"><div class="card-title">Ideas for today</div><div id="ideasList"></div></div>
+      </div>
+      <div class="card"><div class="card-title">Quick checks</div><div id="quickChecks"></div></div>
     </div>
 
-    <!-- ════════════ REVENUE ════════════ -->
+    <!-- ══════ REVENUE ══════ -->
     <div class="page" id="page-revenue">
-      <div class="top"><h1>💰 Revenue</h1><button class="btn btn-ghost btn-sm" onclick="toggleRevenueType()" id="revTypeBtn">Show SFW 🌸</button></div>
-      <div class="row row-2" id="revStatsRow"></div>
+      <div class="top"><h1>Revenue</h1></div>
+      <div class="row row-3" id="revStats"></div>
       <div class="card">
         <div class="card-title">Add payment</div>
         <div class="f-row">
-          <div class="f-group"><label>Amount</label><select class="f-control f-control-sm" id="revAmount"><option value="15">$15 VIP</option><option value="25">$25 VIP</option><option value="35">$35 Custom</option><option value="50">$50 Custom</option></select></div>
+          <div class="f-group"><label>Amount</label><input class="f-control f-control-sm" id="revAmount" type="number" value="15" style="width:80px"></div>
           <div class="f-group"><label>Model</label><select class="f-control f-control-sm" id="revModel"><option>Annie</option><option>Yesha</option><option>Jasmine</option></select></div>
-          <div class="f-group"><label>Source</label><select class="f-control f-control-sm" id="revSource"><option>X DM</option><option>Telegram</option><option>Dating app</option><option>Reddit</option></select></div>
-          <div class="f-group"><label>Type</label><select class="f-control f-control-sm" id="revType"><option value="nsfw">🔥 NSFW</option><option value="sfw">🌸 SFW</option></select></div>
-          <button class="btn btn-primary btn-sm" onclick="addRevenue()">＋ Add</button>
+          <div class="f-group"><label>Source</label><select class="f-control f-control-sm" id="revSource"><option>X DM</option><option>Telegram</option><option>Dating app</option><option>Reddit</option><option>Custom</option></select></div>
+          <button class="btn btn-primary btn-sm" onclick="addRevenue()">+ Add</button>
         </div>
       </div>
       <div class="card"><div class="card-title">Payment history</div><div id="revHistory"></div></div>
     </div>
 
-    <!-- ════════════ ACCOUNTS ════════════ -->
+    <!-- ══════ ACCOUNTS ══════ -->
     <div class="page" id="page-accounts">
-      <div class="top"><h1>◉ Accounts</h1><button class="btn btn-ghost btn-sm" onclick="alert('Add accounts in Settings page')">＋ Add account</button></div>
+      <div class="top"><h1>Accounts</h1></div>
       <div id="accountsContent"></div>
     </div>
 
-    <!-- ════════════ SETTINGS ════════════ -->
-    <div class="page" id="page-settings">
-      <div class="top"><h1>⚙ Settings</h1></div>
-      <div class="card">
-        <div class="card-title">API Keys</div>
-        <div class="f-group" style="margin-bottom:10px"><label>RunPod API Key</label><input class="f-control" id="setRunpod" placeholder="rpc-..." style="width:100%;max-width:400px"></div>
-        <div class="f-group" style="margin-bottom:10px"><label>Telegram Bot Token</label><input class="f-control" id="setTelegram" placeholder="bot token" style="width:100%;max-width:400px"></div>
-        <div class="f-group" style="margin-bottom:10px"><label>Groq/OpenAI API Key</label><input class="f-control" id="setLlm" placeholder="gsk-... or sk-..." style="width:100%;max-width:400px"></div>
-        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Google Drive</div>
-        <div style="font-size:12px;color:#a1a1aa;margin-bottom:8px">Set <code>GOOGLE_TOKEN_JSON</code> as Railway env var for cloud persistence. Local: ✅ Connected.</div>
-        <div style="font-size:12px;color:#34d399">◉ Drive status: ready</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Config.yaml</div>
-        <pre style="font-size:11px;color:#6b6b80;background:#0a0a12;padding:14px;border-radius:8px;overflow-x:auto">runpod: api_key not set · telegram: bot_token not set · models: 3 configured</pre>
-      </div>
-    </div>
-
-  </div><!-- /main -->
-</div><!-- /app -->
-
+  </div>
+</div>
 <div id="toast" class="toast"></div>
 
 <script>
-// ── STATE ──
-let CT = 'nsfw'; // current content type
-let PAGE = 'dashboard';
-let REV_CT = 'nsfw'; // revenue filter
-let CAP_CT = 'nsfw'; // caption filter
+let PAGE = 'analytics';
 let allData = {};
-
-// ── UTILITY ──
 const $ = id => document.getElementById(id);
+
 function toast(msg, color='#34d399') {
   const t = $('toast');
   t.textContent = msg; t.style.color = color;
   t.style.display = 'block';
   setTimeout(() => t.style.display = 'none', 3000);
-}
-
-function setContentType(t) {
-  CT = t;
-  document.querySelectorAll('.ct-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.ct-btn.${t}`).classList.add('active');
-  // Update type badges
-  ['dashTypeBadge','galleryTypeBadge'].forEach(id => {
-    const el = $(id);
-    if(el) { el.textContent = t === 'nsfw' ? '🔥 NSFW' : '🌸 SFW'; el.className = 'type-badge ' + t; }
-  });
-  load(); // re-render
 }
 
 function switchPage(p) {
@@ -291,281 +231,367 @@ function switchPage(p) {
 
 async function fetchAPI(path) {
   try { const r = await fetch(path); return await r.json(); }
-  catch(e) { console.error(e); return {}; }
+  catch(e) { return {}; }
+}
+
+async function postAPI(path, data) {
+  try {
+    const r = await fetch(path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    return await r.json();
+  } catch(e) { return {}; }
 }
 
 async function load() { loadPage(PAGE); }
 
 async function loadPage(page) {
-  // Always load everything
-  const [stats, models, accounts, revenue, captions, scraping, gallery, pipeline, dms] = await Promise.all([
-    fetchAPI('/api/stats'), fetchAPI('/api/models'), fetchAPI('/api/accounts'),
-    fetchAPI('/api/revenue'), fetchAPI('/api/captions'), fetchAPI('/api/scraping'),
-    fetchAPI('/api/gallery'), fetchAPI('/api/pipeline'), fetchAPI('/api/dms'),
+  const [analytics, models, accounts, revenue, captions, scraping, gallery, pipeline, hub] = await Promise.all([
+    fetchAPI('/api/analytics'),
+    fetchAPI('/api/models'),
+    fetchAPI('/api/accounts'),
+    fetchAPI('/api/revenue'),
+    fetchAPI('/api/captions'),
+    fetchAPI('/api/scraping'),
+    fetchAPI('/api/gallery'),
+    fetchAPI('/api/pipeline'),
+    fetchAPI('/api/hub')
   ]);
-  allData = { stats, models, accounts, revenue, captions, scraping, gallery, pipeline, dms };
+  allData = { analytics, models, accounts, revenue, captions, scraping, gallery, pipeline, hub };
 
-  if(page === 'dashboard') renderDashboard();
+  if(page === 'analytics') renderAnalytics();
   else if(page === 'models') renderModels();
   else if(page === 'gallery') renderGallery();
   else if(page === 'pipeline-nsfw') renderPipeline('nsfw');
   else if(page === 'pipeline-sfw') renderPipeline('sfw');
   else if(page === 'scraping') renderScraping();
   else if(page === 'captions') renderCaptions();
-  else if(page === 'inbox') renderInbox();
+  else if(page === 'hub') renderHub();
   else if(page === 'revenue') renderRevenue();
   else if(page === 'accounts') renderAccounts();
 }
 
-// ══════════════════ DASHBOARD ══════════════════
-function renderDashboard() {
-  const s = allData.stats;
-  const isNsfw = CT === 'nsfw';
-  const revenue = isNsfw ? (s.revenue_nsfw||0) : (s.revenue_sfw||0);
-  const images = isNsfw ? (s.images_nsfw||0) : (s.images_sfw||0);
-  $('statsRow').innerHTML = `
-    <div class="card stat"><div class="stat-val">$${revenue}</div><div class="stat-label">Revenue ${isNsfw?'🔥 NSFW':'🌸 SFW'}</div><div class="stat-sub">${s.revenue_today>0?'+$'+s.revenue_today+' today':'No entries yet'}</div></div>
-    <div class="card stat"><div class="stat-val">${s.vip_members||0}</div><div class="stat-label">VIP members</div></div>
-    <div class="card stat"><div class="stat-val">${images}</div><div class="stat-label">${isNsfw?'NSFW':'SFW'} images ready</div></div>
-    <div class="card stat"><div class="stat-val">${s.followers||0}</div><div class="stat-label">Total followers</div></div>`;
+// ══════════════════ ANALYTICS ══════════════════
+function renderAnalytics() {
+  const a = allData.analytics;
+  const s = a.summary || {};
+  $('analyticsStats').innerHTML = `
+    <div class="card stat"><div class="stat-val">${s.models_ready||0}/${s.models_total||0}</div><div class="stat-label">Models with LoRA</div></div>
+    <div class="card stat"><div class="stat-val">${s.images_total||0}</div><div class="stat-label">Images ready</div></div>
+    <div class="card stat"><div class="stat-val">$${s.revenue_total||0}</div><div class="stat-label">Total revenue</div></div>
+    <div class="card stat"><div class="stat-val">${s.needs_attention||0}</div><div class="stat-label">Items needing action</div></div>`;
+
+  const prios = a.priorities || [];
+  $('priorityList').innerHTML = prios.length === 0
+    ? '<div style="padding:20px;color:#6b6b80;font-size:13px;text-align:center">All good! No priorities right now.</div>'
+    : prios.map(p => `<div class="prio-item ${p.priority}">
+      <div><div style="font-size:13px;font-weight:500;color:#d4d4d8">${p.action} — ${p.model}</div>
+      <div style="font-size:11px;color:#6b6b80;margin-top:2px">${p.detail}</div></div>
+      <span class="pill ${p.priority==='high'?'pill-red':p.priority==='medium'?'pill-yellow':'pill-gray'}">${p.priority}</span>
+    </div>`).join('');
 
   const models = allData.models || [];
-  $('modelsOverviewBody').innerHTML = models.map(m => {
-    const imgs = isNsfw ? (m.nsfw_images||0) : (m.sfw_images||0);
-    const lora = isNsfw ? (m.nsfw_lora||'missing') : (m.sfw_lora||'missing');
-    const barCol = isNsfw ? 'bar-red' : 'bar-green';
-    const loraClass = lora === 'ready' ? 'tag-green' : 'tag-yellow';
-    return `<div class="model-card">
-      <div class="mc-top"><span class="mc-name">${m.name} <span class="tag ${loraClass}">${lora==='ready'?'✅ LoRA':'⏳ No LoRA'}</span></span><span class="pill ${m.status==='active'?'pill-green':'pill-gray'}">${m.status}</span></div>
-      <div class="mc-stats"><span>$${m.revenue||0}/mo</span><span>${m.vips||0} VIPs</span><span>${imgs} images</span><span>${m.followers||0} followers</span></div>
-      <div class="bar"><div class="bar-fill ${barCol}" style="width:${Math.min(100, imgs*5)}%"></div></div>
-      <div style="font-size:11px;color:#6b6b80">${(m.platforms||['X']).map(p => p==='X'?'🔵 X':p==='Telegram'?'✈️ TG':p).join(' · ')}</div>
+  $('analyticsModels').innerHTML = models.map(m => {
+    const needs = prios.filter(p => p.model === m.name);
+    return `<div class="card">
+      <div class="card-title"><span>${m.name}</span><span class="tag ${m.lora==='ready'?'tag-green':'tag-yellow'}">${m.lora==='ready'?'LoRA ready':'No LoRA'}</span></div>
+      <div class="mc-stats"><span>$${m.revenue||0} revenue</span><span>${m.images||0} images</span><span>${m.followers||0} followers</span></div>
+      <div style="font-size:11px;color:#6b6b80;margin-top:4px">${(m.platforms||['X']).join(', ')}</div>
+      ${needs.length > 0 ? `<div style="margin-top:8px;font-size:11px">${needs.slice(0,2).map(n => `<span class="tag ${n.priority==='high'?'tag-red':'tag-yellow'}">${n.action}</span>`).join(' ')}</div>` : ''}
     </div>`;
   }).join('');
-
-  $('agentStatus').innerHTML = `
-    <div style="margin:6px 0">${['LoRA','Generation','Validation','Scraping','Captions'].map(s => `<span class="tag tag-green">${s} ✅</span>`).join(' ')}</div>
-    <div style="margin-top:8px">All automation scripts ready. No active runs.</div>`;
-
-  $('tasksList').innerHTML = [
-    'Post images to X + Telegram',
-    isNsfw ? '🔥 Post NSFW to TG VIP channels' : '🌸 Post SFW teasers to X/Reddit',
-    'Reply to DMs across all platforms',
-    'Enter revenue from today\'s chats',
-    'DM models for photos if needed',
-    'Post 1 Reddit post'
-  ].map(t => `<div class="task"><input type="checkbox"><span>${t}</span></div>`).join('');
 }
 
 // ══════════════════ MODELS ══════════════════
+function showAddModel() { $('addModelForm').style.display = 'block'; }
+function hideAddModel() { $('addModelForm').style.display = 'none'; }
+async function saveNewModel() {
+  const name = $('newModelName').value.trim();
+  if(!name) return toast('Enter a name','#f87171');
+  await postAPI('/api/models/update', {name, persona:$('newModelPersona').value, platforms:$('newModelPlatforms').value.split(',').map(s=>s.trim())});
+  $('addModelForm').style.display = 'none';
+  toast('Model added');
+  load();
+}
+async function updateModel(name, data) {
+  await postAPI('/api/models/update', {name,...data});
+  toast('Saved');
+  load();
+}
+async function deleteModel(name) {
+  if(!confirm(`Delete ${name}?`)) return;
+  await postAPI('/api/models/delete', {name});
+  toast('Deleted');
+  load();
+}
+
 function renderModels() {
   const models = allData.models || [];
   $('modelsList').innerHTML = models.map(m => `
     <div class="card">
-      <div class="card-title"><span>${m.name} · ${m.persona||'Custom'}</span><span class="pill ${m.status==='active'?'pill-green':'pill-gray'}">${m.status}</span></div>
-      <div class="mc-stats"><span>$${m.revenue||0}/mo</span><span>${m.vips||0} VIPs</span><span>${m.followers||0} followers</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
-        <div style="background:#0a0a12;padding:12px;border-radius:8px;border:1px solid rgba(248,113,113,.15)">
-          <div style="font-size:11px;color:#f87171;font-weight:600;margin-bottom:6px">🔥 NSFW LoRA</div>
-          <span class="tag ${m.nsfw_lora==='ready'?'tag-green':'tag-yellow'}">${m.nsfw_lora==='ready'?'✅ Trained':'⏳ Not trained'}</span>
-          <div style="font-size:11px;color:#6b6b80;margin-top:4px">${m.nsfw_images||0} images generated</div>
-        </div>
-        <div style="background:#0a0a12;padding:12px;border-radius:8px;border:1px solid rgba(52,211,153,.15)">
-          <div style="font-size:11px;color:#34d399;font-weight:600;margin-bottom:6px">🌸 SFW LoRA</div>
-          <span class="tag ${m.sfw_lora==='ready'?'tag-green':'tag-yellow'}">${m.sfw_lora==='ready'?'✅ Trained':'⏳ Not trained'}</span>
-          <div style="font-size:11px;color:#6b6b80;margin-top:4px">${m.sfw_images||0} images generated</div>
-        </div>
+      <div class="card-title">
+        <span>${m.name}</span>
+        <div><span class="tag ${m.lora==='ready'?'tag-green':'tag-yellow'}">LoRA: ${m.lora||'missing'}</span></div>
       </div>
-      <div style="margin-top:10px;font-size:11px;color:#6b6b80">Platforms: ${(m.platforms||['X']).join(', ')}</div>
+      <div class="f-group" style="margin-bottom:10px">
+        <label>Persona prompt</label>
+        <textarea class="f-control" id="persona_${m.name}" style="min-height:50px" placeholder="Describe this model's persona...">${m.persona||''}</textarea>
+      </div>
+      <div class="f-row">
+        <div class="f-group"><label>Platforms</label><input class="f-control f-control-sm" id="platforms_${m.name}" value="${(m.platforms||['X']).join(', ')}" style="width:200px"></div>
+        <div class="f-group"><label>Images</label><input class="f-control f-control-sm" id="images_${m.name}" value="${m.images||0}" type="number" style="width:60px"></div>
+        <div class="f-group"><label>Followers</label><input class="f-control f-control-sm" id="followers_${m.name}" value="${m.followers||0}" type="number" style="width:60px"></div>
+        <div class="f-group"><label>Revenue</label><input class="f-control f-control-sm" id="revenue_${m.name}" value="${m.revenue||0}" type="number" style="width:60px"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="updateModel('${m.name}',{persona:document.getElementById('persona_${m.name}').value,platforms:document.getElementById('platforms_${m.name}').value.split(',').map(s=>s.trim()),images:parseInt(document.getElementById('images_${m.name}').value)||0,followers:parseInt(document.getElementById('followers_${m.name}').value)||0,revenue:parseInt(document.getElementById('revenue_${m.name}').value)||0})">Save</button>
+        <button class="btn btn-ghost btn-sm ${m.lora==='ready'?'':'pill-yellow'}" onclick="updateModel('${m.name}',{lora:'ready'})">Mark LoRA trained</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteModel('${m.name}')">Delete</button>
+      </div>
     </div>
   `).join('');
 }
 
-function addModel() { $('addModelForm').style.display = 'block'; }
-async function saveNewModel() {
-  const name = $('newModelName').value.trim();
-  if(!name) return toast('Enter a name', '#f87171');
-  const persona = $('newModelPersona').value;
-  const platforms = $('newModelPlatforms').value.split(',').map(s=>s.trim());
-  await fetch('/api/models/add', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,persona,platforms})});
-  $('addModelForm').style.display = 'none';
-  toast('Model added!');
-  load();
-}
-
 // ══════════════════ GALLERY ══════════════════
 function renderGallery() {
-  const models = allData.models || [];
-  const sel = $('galleryModelFilter');
-  sel.innerHTML = '<option value="all">All models</option>' + models.map(m => `<option value="${m.name.toLowerCase()}">${m.name}</option>`).join('');
-  const filter = sel.value;
   const data = allData.gallery?.data || [];
-  // Placeholder gallery items
-  const items = data.filter(d => filter === 'all' || d.model === filter).slice(0,12);
-  if(items.length === 0) {
-    $('galleryGrid').innerHTML = '<div class="card" style="grid-column:1/-1;text-align:center;padding:40px;color:#6b6b80;font-size:13px">No images yet. Train LoRAs and generate to populate gallery.</div>';
-  } else {
-    $('galleryGrid').innerHTML = items.map(d => `<div class="gallery-item">📷 ${d.model}<br><span style="font-size:10px">${d.type||CT}</span></div>`).join('');
-  }
+  const models = allData.models || [];
+  const mf = $('galModelFilter'); const tf = $('galTagFilter');
+  mf.innerHTML = '<option value="all">All models</option>' + models.map(m => `<option value="${m.name.toLowerCase()}">${m.name}</option>`).join('');
+  const filter = mf.value; const tfilter = tf.value;
+  const items = data.filter(d => (filter==='all'||d.model===filter) && (tfilter==='all'||d.tag===tfilter));
+  $('galleryGrid').innerHTML = items.length === 0
+    ? '<div class="card" style="grid-column:1/-1;text-align:center;padding:30px;color:#6b6b80;font-size:13px">No images. Generate from Pipeline.</div>'
+    : items.map((d,i) => `<div class="gal-item">
+      <div style="font-size:20px;margin-bottom:6px">+</div>
+      <div style="font-size:12px;color:#d4d4d8">${d.model||'?'}</div>
+      <span class="tag ${d.tag==='ready'?'tag-green':d.tag==='rejected'?'tag-red':'tag-yellow'}">${d.tag||'pending'}</span>
+      <div style="margin-top:6px;display:flex;gap:4px;justify-content:center">
+        <button class="btn btn-xs ${d.tag==='ready'?'btn-primary':'btn-ghost'}" onclick="tagGalleryItem(${i},'ready')">Ready</button>
+        <button class="btn btn-xs btn-ghost" onclick="tagGalleryItem(${i},'rejected')">Reject</button>
+      </div></div>`).join('');
+}
+async function tagGalleryItem(idx, tag) {
+  await postAPI('/api/gallery/tag', {index:idx, tag});
+  renderGallery();
 }
 
 // ══════════════════ PIPELINE ══════════════════
-const PIPELINE_STEPS = {
+const PIPELINE = {
   nsfw: [
-    {id:'train', label:'Train NSFW LoRA', desc:'RunPod · BigLust v5 · 5-10 photos', color:'red'},
-    {id:'generate', label:'Generate NSFW images', desc:'RunPod · Batch 50 images', color:'red'},
-    {id:'validate', label:'Validate images', desc:'Face detect · blur check · res check', color:'red'},
-    {id:'strip', label:'Strip metadata', desc:'Remove EXIF · location · device data', color:'red'},
-    {id:'post', label:'Post to TG VIP', desc:'Main + 2 backup channels', color:'red'},
+    {id:'train', label:'Train LoRA', desc:'RunPod SDXL BigLust v5 - 5-10 photos needed'},
+    {id:'generate', label:'Generate images', desc:'Batch 50 images via ComfyUI'},
+    {id:'validate', label:'Validate images', desc:'Face check, resolution, blur detection'},
+    {id:'strip', label:'Strip metadata', desc:'Remove EXIF, location, device data'},
+    {id:'post', label:'Post to Telegram', desc:'Main + 2 backup channels (you post manually)'},
   ],
   sfw: [
-    {id:'train', label:'Train SFW LoRA', desc:'RunPod · RealVisXL v5 · 5-10 photos', color:'green'},
-    {id:'generate', label:'Generate SFW images', desc:'RunPod · Batch 50 images', color:'green'},
-    {id:'validate', label:'Validate images', desc:'Face detect · blur check · res check', color:'green'},
-    {id:'post', label:'Post to X/Reddit', desc:'Teaser content · dating apps', color:'green'},
+    {id:'train', label:'Train LoRA', desc:'Upload 5-10 SFW photos for training'},
+    {id:'generate', label:'Generate images', desc:'Batch 50 images, SFW style'},
+    {id:'validate', label:'Validate images', desc:'Face check, resolution, blur detection'},
+    {id:'post', label:'Ready for posting', desc:'Images ready - post to X/Reddit/dating apps (you post)'},
   ]
 };
 
 function renderPipeline(type) {
   const models = allData.models || [];
   const pipe = allData.pipeline || {};
-  const steps = PIPELINE_STEPS[type];
-  const container = $(`pipeline${type==='nsfw'?'Nsfw':'Sfw'}Content`);
+  const steps = PIPELINE[type];
+  const container = $(type === 'nsfw' ? 'pipelineNsfw' : 'pipelineSfw');
 
   container.innerHTML = models.map(m => {
     const key = `${m.name.toLowerCase()}_${type}`;
     const status = pipe[key] || {};
     return `<div class="card">
-      <div class="card-title"><span>${m.name}</span><span class="pill ${type==='nsfw'?'pill-red':'pill-green'}">${type==='nsfw'?'🔥 NSFW':'🌸 SFW'}</span></div>
+      <div class="card-title"><span>${m.name}</span><span class="pill ${type==='nsfw'?'pill-red':'pill-green'}">${type.toUpperCase()}</span></div>
       ${steps.map(s => {
         const st = status[s.id] || 'idle';
-        const statusClass = st === 'running' ? 'status-running' : st === 'done' ? 'status-done' : st === 'error' ? 'status-error' : 'status-idle';
-        const statusIcon = st === 'running' ? '⏳' : st === 'done' ? '✅' : st === 'error' ? '❌' : '○';
-        const btnClass = type === 'nsfw' ? 'btn-nsfw' : 'btn-sfw';
+        const cls = st==='running'?'status-running':st==='done'?'status-done':st==='error'?'status-error':'status-idle';
+        const icon = st==='running'?'..':st==='done'?'OK':st==='error'?'!!':'--';
         return `<div class="step-card">
           <div class="step-info">
-            <span style="font-size:16px">${statusIcon}</span>
+            <span style="font-size:14px;width:20px;text-align:center">${icon}</span>
             <div><div style="font-size:13px;color:#d4d4d8;font-weight:500">${s.label}</div><div style="font-size:11px;color:#6b6b80">${s.desc}</div></div>
           </div>
-          <div><span class="step-status ${statusClass}" style="margin-right:8px">${st}</span>
-          <button class="btn ${btnClass} btn-xs" onclick="triggerPipeline('${m.name}','${type}','${s.id}')">Run</button></div>
+          <div><span class="step-status ${cls}" style="margin-right:8px">${st}</span>
+          <button class="btn btn-ghost btn-sm" onclick="triggerPipe('${m.name}','${type}','${s.id}')">Run</button></div>
         </div>`;
       }).join('')}
     </div>`;
   }).join('');
 }
 
-async function triggerPipeline(model, type, step) {
-  await fetch('/api/pipeline/trigger', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,content_type:type,step})});
-  toast(`⏳ ${step} started for ${model} (${type})`, '#fbbf24');
+async function triggerPipe(model, type, step) {
+  await postAPI('/api/pipeline/trigger', {model, content_type:type, step});
+  toast(`Started ${step} for ${model}`);
   load();
 }
 
 // ══════════════════ SCRAPING ══════════════════
 function renderScraping() {
-  const data = allData.scraping?.data || [];
   const models = allData.models || [];
+  const data = allData.scraping || [];
   $('scrapingContent').innerHTML = models.map(m => {
-    const targets = data.filter(d => d.model === m.name);
-    return `<div class="model-card">
-      <div class="mc-top"><span class="mc-name">${m.name}</span></div>
-      ${targets.length === 0 ? `<div style="font-size:12px;color:#6b6b80;padding:8px 0">No targets configured. Add in Settings.</div>` :
-        targets.map(t => `<div style="padding:6px 0;font-size:12px;color:#a1a1aa">📡 ${t.niche||'?'} · ${t.count||0} accounts · Last: ${t.last_scraped||'Never'}</div>`).join('')}
-      <div style="margin-top:8px;display:flex;gap:6px">
-        <span class="tag tag-purple">${m.persona||'Custom'}</span>
-        <span class="tag">${m.platforms?.join(', ')||'X'}</span>
+    const s = data.find(d => d.model === m.name) || {model:m.name,target_vibes:'',target_accounts:'',hashtags:'',last_scraped:'Not started'};
+    return `<div class="card">
+      <div class="card-title"><span>${m.name}</span><span class="tag ${s.last_scraped==='Not started'?'tag-yellow':'tag-green'}">${s.last_scraped||'Not started'}</span></div>
+      <div class="scrape-field"><label>Target vibes / niche</label><textarea id="sv_${m.name}" placeholder="e.g. college, lifestyle, gym girls">${s.target_vibes||''}</textarea></div>
+      <div class="scrape-field"><label>Accounts to follow for inspo</label><input id="sa_${m.name}" value="${s.target_accounts||''}" placeholder="@account1, @account2"></div>
+      <div class="scrape-field"><label>Hashtags to collect</label><input id="sh_${m.name}" value="${s.hashtags||''}" placeholder="#tag1, #tag2"></div>
+      <button class="btn btn-primary btn-sm" onclick="saveScraping('${m.name}')">Save</button>
+    </div>`;
+  }).join('');
+}
+
+async function saveScraping(model) {
+  await postAPI('/api/scraping/update', {
+    model,
+    target_vibes: $(`sv_${model}`).value,
+    target_accounts: $(`sa_${model}`).value,
+    hashtags: $(`sh_${model}`).value
+  });
+  toast('Scraping config saved');
+}
+
+// ══════════════════ CAPTIONS ══════════════════
+function renderCaptions() {
+  const models = allData.models || [];
+  const data = allData.captions || [];
+  $('captionsContent').innerHTML = models.map(m => {
+    const caps = data.filter(c => c.model === m.name);
+    return `<div class="card">
+      <div class="card-title"><span>${m.name}</span><span class="pill pill-gray">${caps.length} captions</span></div>
+      ${caps.slice(0,5).map(c => `<div class="cap-item">
+        <div class="cap-text">${c.text||''}</div>
+        <div class="cap-tags">${c.tags||''}</div>
+      </div>`).join('')}
+      ${caps.length === 0 ? '<div style="font-size:12px;color:#6b6b80;padding:6px 0">No captions yet</div>' : ''}
+      <div style="margin-top:10px">
+        <textarea class="f-control" id="capText_${m.name}" placeholder="Write a caption..." style="min-height:40px;margin-bottom:6px"></textarea>
+        <div class="f-row">
+          <input class="f-control f-control-sm" id="capTags_${m.name}" placeholder="#tags" style="width:200px">
+          <button class="btn btn-primary btn-sm" onclick="addCaption('${m.name}')">Add caption</button>
+        </div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ══════════════════ CAPTIONS ══════════════════
-function toggleCaptionType() {
-  CAP_CT = CAP_CT === 'nsfw' ? 'sfw' : 'nsfw';
-  $('captionTypeToggle').textContent = CAP_CT === 'nsfw' ? 'Switch to SFW 🌸' : 'Switch to NSFW 🔥';
+async function addCaption(model) {
+  const text = $(`capText_${model}`).value.trim();
+  if(!text) return toast('Write a caption','#f87171');
+  await postAPI('/api/captions/add', {model, text, tags: $(`capTags_${model}`).value});
+  $(`capText_${model}`).value = '';
+  $(`capTags_${model}`).value = '';
+  toast('Caption added');
   renderCaptions();
 }
-function renderCaptions() {
-  const data = allData.captions || [];
-  const filtered = data.filter(c => (c.type||CAP_CT) === CAP_CT);
-  $('captionsContent').innerHTML = filtered.length === 0
-    ? `<div style="font-size:12px;color:#6b6b80;padding:20px">No ${CAP_CT} captions yet. Generate from Pipeline.</div>`
-    : filtered.slice(0,6).map(c => `<div class="cap"><div class="cap-model">${c.model||'?'} · ${c.type||CAP_CT}</div><div class="cap-text">${c.text||'No caption'}</div><div class="cap-tags">${(c.tags||[]).join(' · ')}</div></div>`).join('');
+
+// ══════════════════ HUB ══════════════════
+function renderHub() {
+  const h = allData.hub || {};
+  const rems = h.reminders || [];
+  const ideas = h.ideas || [];
+
+  $('reminderList').innerHTML = rems.map((r,i) => `
+    <div class="chk-item ${r.done?'done':''}" onclick="toggleReminder(${i})">
+      <input type="checkbox" ${r.done?'checked':''} onchange="toggleReminder(${i})">
+      <span class="chk-text">${r.text}</span>
+    </div>
+  `).join('');
+
+  $('ideasList').innerHTML = ideas.length === 0
+    ? '<div style="color:#6b6b80;font-size:12px;padding:10px">No ideas yet. Generate daily.</div>'
+    : ideas.map(d => `<div style="padding:8px 0;border-bottom:1px solid #0f0f1a;font-size:13px">
+      <span style="color:#a855f7">${d.model||'?'}</span>
+      <span style="color:#6b6b80"> — ${d.idea||''} <span style="font-size:10px;color:#3a3a50">${d.date||''}</span></span>
+    </div>`).join('');
+
+  const models = allData.models || [];
+  $('quickChecks').innerHTML = models.map(m => {
+    const needs = (allData.analytics?.priorities||[]).filter(p => p.model === m.name && p.priority === 'high');
+    return `<div style="padding:8px 0;border-bottom:1px solid #0f0f1a;display:flex;justify-content:space-between;align-items:center;font-size:13px">
+      <span style="color:#d4d4d8">${m.name}</span>
+      <span style="color:#6b6b80">${needs.length > 0 ? needs.map(n => n.action).join(', ') : 'All good'}</span>
+    </div>`;
+  }).join('');
 }
 
-// ══════════════════ INBOX ══════════════════
-function renderInbox() {
-  const data = allData.dms?.data || [];
-  const filter = $('inboxFilter').value;
-  const filtered = filter === 'all' ? data : data.filter(d => d.type === filter);
-  $('inboxContent').innerHTML = filtered.length === 0
-    ? `<div style="font-size:12px;color:#6b6b80;padding:20px">No messages</div>`
-    : filtered.map(d => `<div class="account-item">
-      <div><div style="font-size:13px;font-weight:500;color:#d4d4d8">${d.from||'?'}</div>
-      <div style="font-size:11px;color:#6b6b80">"${d.preview||''}" · ${d.source||''} · ${d.time||''}</div></div>
-      <div><span class="tag ${d.type==='nsfw'?'tag-red':'tag-green'}">${d.type||'sfw'}</span>
-      <button class="btn btn-ghost btn-xs" onclick="alert('TODO: reply to '+this.dataset.from)" data-from="${d.from||''}">${d.action==='payment'?'💰':'Reply'}</button></div>
-    </div>`).join('');
+async function toggleReminder(idx) {
+  await postAPI('/api/hub/reminder/toggle', {index: idx});
+  load();
 }
 
 // ══════════════════ REVENUE ══════════════════
-function toggleRevenueType() {
-  REV_CT = REV_CT === 'nsfw' ? 'sfw' : 'nsfw';
-  $('revTypeBtn').textContent = REV_CT === 'nsfw' ? 'Show SFW 🌸' : 'Show NSFW 🔥';
-  renderRevenue();
-}
 function renderRevenue() {
   const r = allData.revenue;
-  const entries = (r.entries||[]).filter(e => (e.type||'sfw') === REV_CT);
-  const total = entries.reduce((s,e) => s+e.amount, 0);
-  const isNsfw = REV_CT === 'nsfw';
-  $('revStatsRow').innerHTML = `
-    <div class="card stat"><div class="stat-val">$${total}</div><div class="stat-label">${isNsfw?'🔥 NSFW':'🌸 SFW'} revenue</div></div>
-    <div class="card stat"><div class="stat-val">$${r.total||0}</div><div class="stat-label">Total (all)</div></div>`;
+  const entries = r?.entries || [];
+  const models = allData.models || [];
+  const sel = $('revModel');
+  if(sel) sel.innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
+
+  $('revStats').innerHTML = `
+    <div class="card stat"><div class="stat-val">$${r?.total||0}</div><div class="stat-label">Total revenue</div></div>
+    <div class="card stat"><div class="stat-val">${entries.length}</div><div class="stat-label">Payments</div></div>
+    <div class="card stat"><div class="stat-val">$${entries.filter(e => e.date === new Date().toISOString().slice(0,10)).reduce((s,e) => s+e.amount, 0)}</div><div class="stat-label">Today</div></div>`;
+
   $('revHistory').innerHTML = entries.length === 0
-    ? `<div style="font-size:12px;color:#6b6b80;padding:10px">No ${REV_CT} revenue entries yet</div>`
-    : entries.slice(-20).reverse().map(e => `
-      <div style="padding:6px 0;display:flex;justify-content:space-between;border-bottom:1px solid #0f0f1a;font-size:12px">
-        <span>${e.date||''} · ${e.model||'?'} · ${e.source||''}</span>
-        <span style="color:#34d399">+$${e.amount||0}</span>
-      </div>`).join('');
+    ? '<div style="font-size:12px;color:#6b6b80;padding:10px">No payments logged</div>'
+    : entries.slice(-30).reverse().map((e,i) => {
+      const realIdx = entries.length - 1 - i;
+      return `<div style="padding:6px 0;display:flex;justify-content:space-between;border-bottom:1px solid #0f0f1a;font-size:12px;align-items:center">
+        <span>${e.date||''} — ${e.model||'?'} — ${e.source||''}</span>
+        <span><span style="color:#34d399;font-weight:500">+$${e.amount||0}</span>
+        <button class="btn btn-ghost btn-xs" style="margin-left:8px" onclick="deleteRev(${realIdx})">x</button></span>
+      </div>`;
+    }).join('');
 }
 
 async function addRevenue() {
-  const amount = parseInt($('revAmount').value);
-  const model = $('revModel').value;
-  const source = $('revSource').value;
-  const ct = $('revType').value;
-  await fetch('/api/revenue/add', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount,model,source,content_type:ct})});
-  toast(`+$${amount} ${model} (${ct})`);
+  const amount = parseInt($('revAmount').value) || 0;
+  if(amount <= 0) return toast('Enter an amount','#f87171');
+  await postAPI('/api/revenue/add', {amount, model:$('revModel').value, source:$('revSource').value});
+  toast(`+$${amount}`);
+  load();
+}
+async function deleteRev(idx) {
+  await postAPI('/api/revenue/delete', {index: idx});
   load();
 }
 
 // ══════════════════ ACCOUNTS ══════════════════
 function renderAccounts() {
-  const data = allData.accounts || [];
   const models = allData.models || [];
-  $('accountsContent').innerHTML = models.map(m => `
-    <div class="card">
-      <div class="card-title"><span>${m.name}</span></div>
-      ${(m.platforms||['X']).map(p => {
-        const acct = data.find(a => a.model === m.name && a.platform === p) || {status:'uncreated',warmup:0};
-        const statusColor = acct.status === 'active' ? 'tag-green' : acct.status === 'warmup' ? 'tag-yellow' : 'tag-red';
-        return `<div class="account-item">
-          <div><span style="font-size:13px;color:#d4d4d8">${p}<span class="tag ${statusColor}" style="margin-left:8px">${acct.status||'uncreated'}</span></span></div>
+  const accts = allData.accounts || [];
+  $('accountsContent').innerHTML = models.map(m => {
+    const platforms = m.platforms || ['X'];
+    return `<div class="card">
+      <div class="card-title"><span>${m.name} — ${m.followers||0} total followers</span></div>
+      ${platforms.map(p => {
+        const a = accts.find(x => x.model === m.name && x.platform === p) || {status:'uncreated',warmup:0,followers:0,username:''};
+        return `<div class="acct-item">
+          <div><span style="font-size:13px;color:#d4d4d8">${p}</span>
+          <span class="tag ${a.status==='active'?'tag-green':a.status==='warmup'?'tag-yellow':'tag-red'}">${a.status||'uncreated'}</span>
+          <span style="font-size:11px;color:#6b6b80;margin-left:6px">${a.username||''} · ${a.followers||0} followers</span></div>
           <div style="display:flex;align-items:center;gap:8px">
-            <div class="warmup-bar"><div class="warmup-fill" style="width:${acct.warmup||0}%"></div></div>
-            <span style="font-size:10px;color:#6b6b80">${acct.warmup||0}% warmup</span>
+            <div class="warmup-bar"><div class="warmup-fill" style="width:${a.warmup||0}%"></div></div>
+            <span style="font-size:10px;color:#6b6b80">${a.warmup||0}%</span>
+            <button class="btn btn-ghost btn-xs" onclick="updateAcct('${m.name}','${p}')">edit</button>
           </div>
         </div>`;
       }).join('')}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-// ══════════════════ SETTINGS ══════════════════
-function saveSettings() {
-  toast('Settings saved locally. Configure actual keys in config.yaml on server.');
+function updateAcct(model, platform) {
+  const a = allData.accounts.find(x => x.model === model && x.platform === platform) || {};
+  const status = prompt('Status (uncreated/warmup/active):', a.status || 'uncreated');
+  if(!status) return;
+  const warmup = parseInt(prompt('Warmup % (0-100):', a.warmup || 0)) || 0;
+  const followers = parseInt(prompt('Followers:', a.followers || 0)) || 0;
+  const username = prompt('Username:', a.username || '') || '';
+  postAPI('/api/accounts/update', {model, platform, status, warmup, followers, username});
+  toast('Account updated');
+  load();
 }
 
 // ══════════════════ INIT ══════════════════

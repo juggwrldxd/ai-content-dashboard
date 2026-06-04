@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Self-contained Railway app — full NSFW/SFW pipeline dashboard."""
-import json, os, sys, datetime, io, random, subprocess
+"""Railway app — Analytics-first command center for AI Content Business."""
+import json, os, datetime, io, random
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, Form
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Optional
 
-# ── GOOGLE DRIVE SETUP ──
 DRIVE_FOLDER = "ai_content_business_data"
-
-# ── In-memory fallback for when Drive token isn't available ──
-MEMORY = {"models":[],"payments":[],"vip_members":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
+MEMORY = {"models":[],"payments":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
+DEFAULT_MODELS = [
+    {"name":"Annie","persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X","Telegram","Reddit"],"lora":"missing"},
+    {"name":"Yesha","persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X","Telegram","Badoo"],"lora":"missing"},
+    {"name":"Jasmine","persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X"],"lora":"missing"},
+]
 
 def get_drive():
     from google.oauth2.credentials import Credentials
@@ -31,214 +32,296 @@ def get_drive():
 def get_or_create_folder(service, name):
     q = f"name='{name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
     r = service.files().list(q=q, pageSize=1, fields="files(id)").execute()
-    files = r.get("files", [])
-    if files: return files[0]["id"]
-    folder = service.files().create(body={"name": name, "mimeType": "application/vnd.google-apps.folder"}, fields="id").execute()
-    return folder["id"]
+    files = r.get("files", []); return files[0]["id"] if files else service.files().create(body={"name":name,"mimeType":"application/vnd.google-apps.folder"},fields="id").execute()["id"]
 
 def read_drive_json(service, folder_id, filename):
     q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
     r = service.files().list(q=q, pageSize=1, fields="files(id)").execute()
     files = r.get("files", [])
     if not files:
-        default = {"models":[],"payments":[],"vip_members":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
-        write_drive_json(service, folder_id, filename, default)
-        return default
-    data = service.files().get_media(fileId=files[0]["id"]).execute()
-    return json.loads(data)
+        default = {"models":[],"payments":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
+        write_drive_json(service, folder_id, filename, default); return default
+    return json.loads(service.files().get_media(fileId=files[0]["id"]).execute())
 
 def write_drive_json(service, folder_id, filename, data):
     q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
     r = service.files().list(q=q, pageSize=1, fields="files(id)").execute()
     files = r.get("files", [])
-    body = json.dumps(data).encode()
-    media = io.BytesIO(body)
     from googleapiclient.http import MediaIoBaseUpload
-    media_obj = MediaIoBaseUpload(media, mimetype="application/json", resumable=False)
-    if files:
-        service.files().update(fileId=files[0]["id"], media_body=media_obj).execute()
-    else:
-        meta = {"name": filename, "parents": [folder_id]}
-        service.files().create(body=meta, media_body=media_obj).execute()
+    media = io.BytesIO(json.dumps(data).encode())
+    m = MediaIoBaseUpload(media, mimetype="application/json", resumable=False)
+    if files: service.files().update(fileId=files[0]["id"], media_body=m).execute()
+    else: service.files().create(body={"name":filename,"parents":[folder_id]},media_body=m).execute()
 
 def get_data():
     try:
-        svc = get_drive()
-        fid = get_or_create_folder(svc, DRIVE_FOLDER)
+        svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
         d = read_drive_json(svc, fid, "data.json")
-        MEMORY.clear()
-        MEMORY.update(d)
-        MEMORY["_drive"] = True
+        MEMORY.clear(); MEMORY.update(d); MEMORY["_drive"] = True
         return svc, fid, MEMORY
-    except (RuntimeError, FileNotFoundError, Exception):
-        # No Drive token — use in-memory data
-        if "models" not in MEMORY or not MEMORY["models"]:
-            MEMORY["models"] = DEFAULT_MODELS
+    except:
+        MEMORY.setdefault("models", DEFAULT_MODELS)
         return None, None, MEMORY
 
 def save_data(data):
     if data.get("_drive"):
         try:
-            svc = get_drive()
-            fid = get_or_create_folder(svc, DRIVE_FOLDER)
+            svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
             write_drive_json(svc, fid, "data.json", {k:v for k,v in data.items() if not k.startswith("_")})
-        except:
-            pass  # silently fall back to memory
-
-# ── Default models ──
-DEFAULT_MODELS = [
-    {"name":"Annie","persona":"College Girl","status":"active","revenue":0,"vips":0,"images":0,"followers":0,"platforms":["X","Telegram","Reddit"],"nsfw_lora":"missing","sfw_lora":"missing","nsfw_images":0,"sfw_images":0},
-    {"name":"Yesha","persona":"Insta Baddie","status":"active","revenue":0,"vips":0,"images":0,"followers":0,"platforms":["X","Telegram","Badoo"],"nsfw_lora":"missing","sfw_lora":"missing","nsfw_images":0,"sfw_images":0},
-    {"name":"Jasmine","persona":"Fit / Athletic","status":"setup","revenue":0,"vips":0,"images":0,"followers":0,"platforms":["X"],"nsfw_lora":"missing","sfw_lora":"missing","nsfw_images":0,"sfw_images":0},
-]
+        except: pass
 
 app = FastAPI()
 
-@app.get("/api/stats")
-def stats():
+# ── ANALYTICS ──
+@app.get("/api/analytics")
+def analytics():
     _, _, d = get_data()
     models = d.get("models", DEFAULT_MODELS)
     payments = d.get("payments", [])
-    today = datetime.date.today().isoformat()
-    month_prefix = datetime.date.today().strftime("%Y-%m")
-    total = sum(p.get("a",0) for p in payments)
-    month_total = sum(p.get("a",0) for p in payments if p.get("d","").startswith(month_prefix))
-    today_total = sum(p.get("a",0) for p in payments if p.get("d","") == today)
-    nsfw_total = sum(p.get("a",0) for p in payments if p.get("ct","") == "nsfw")
-    sfw_total = sum(p.get("a",0) for p in payments if p.get("ct","") == "sfw")
-    total_nsfw_imgs = sum(m.get("nsfw_images",0) for m in models)
-    total_sfw_imgs = sum(m.get("sfw_images",0) for m in models)
+    pipe = d.get("pipeline", {})
+    priorities = []
+    for m in models:
+        name = m["name"]
+        key = name.lower()
+        nsfw_p = pipe.get(f"{key}_nsfw", {}); sfw_p = pipe.get(f"{key}_sfw", {})
+        if m.get("lora") != "ready":
+            priorities.append({"model":name,"action":"Train LoRA","priority":"high","detail":"No LoRA trained. Upload 5-10 photos to begin.","type":"nsfw"})
+            priorities.append({"model":name,"action":"Train SFW LoRA","priority":"high","detail":"No SFW LoRA trained. Upload 5-10 SFW photos.","type":"sfw"})
+        if m.get("images",0) == 0:
+            priorities.append({"model":name,"action":"Generate images","priority":"medium","detail":"LoRA ready but no images generated yet.","type":"nsfw"})
+        accts = d.get("accounts", [])
+        model_accts = [a for a in accts if a.get("model") == name]
+        if not model_accts:
+            priorities.append({"model":name,"action":"Create accounts","priority":"high","detail":"No accounts set up for this model.","type":"all"})
+        else:
+            for a in model_accts:
+                if a.get("warmup",0) < 100 and a.get("status") == "warmup":
+                    priorities.append({"model":name,"action":f"Warmup {a['platform']}","priority":"medium","detail":f"Account at {a['warmup']}% warmup.","type":"sfw"})
+        caps = d.get("captions", [])
+        model_caps = [c for c in caps if c.get("model") == name]
+        if len(model_caps) < 3:
+            priorities.append({"model":name,"action":"Write captions","priority":"low","detail":f"Only {len(model_caps)} captions queued. Need 3+.","type":"all"})
+        if m.get("revenue",0) == 0:
+            priorities.append({"model":name,"action":"Log revenue","priority":"low","detail":"No revenue logged yet.","type":"all"})
+    needs_attention = [m["name"] for m in models if any(p["model"]==m["name"] and p["priority"]=="high" for p in priorities)]
+    total_rev = sum(p.get("a",0) for p in payments)
+    total_imgs = sum(m.get("images",0) for m in models)
+    total_lora = sum(1 for m in models if m.get("lora")=="ready")
     return {
-        "revenue_total": total, "revenue_month": month_total, "revenue_today": today_total,
-        "revenue_nsfw": nsfw_total, "revenue_sfw": sfw_total,
-        "vip_members": len(d.get("vip_members",[])),
-        "images_ready": total_nsfw_imgs + total_sfw_imgs,
-        "images_nsfw": total_nsfw_imgs, "images_sfw": total_sfw_imgs,
-        "followers": sum(m.get("followers",0) for m in models),
+        "priorities": sorted(priorities, key=lambda p: {"high":0,"medium":1,"low":2}[p["priority"]]),
+        "summary": {
+            "models_total": len(models),
+            "models_ready": total_lora,
+            "images_total": total_imgs,
+            "revenue_total": total_rev,
+            "needs_attention": len(needs_attention),
+            "needs_attention_names": needs_attention
+        }
     }
 
+# ── MODELS ──
 @app.get("/api/models")
 def get_models():
-    _, _, d = get_data()
-    return d.get("models", DEFAULT_MODELS)
+    _, _, d = get_data(); return d.get("models", DEFAULT_MODELS)
 
-@app.get("/api/accounts")
-def get_accounts():
+@app.post("/api/models/update")
+def update_model(data: dict):
     _, _, d = get_data()
-    return d.get("accounts", [])
+    models = d.setdefault("models", [])
+    for i, m in enumerate(models):
+        if m["name"] == data.get("name"):
+            models[i].update({k:v for k,v in data.items() if k != "name"})
+            save_data(d); return {"ok":True}
+    models.append({"name":data["name"],"persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X"],"lora":"missing"})
+    save_data(d); return {"ok":True}
 
+@app.post("/api/models/delete")
+def delete_model(data: dict):
+    _, _, d = get_data()
+    d["models"] = [m for m in d.get("models",[]) if m["name"] != data.get("name")]
+    save_data(d); return {"ok":True}
+
+# ── REVENUE ──
 @app.get("/api/revenue")
 def get_revenue():
     _, _, d = get_data()
     payments = d.get("payments", [])
-    total = sum(p.get("a",0) for p in payments)
-    nsfw = sum(p.get("a",0) for p in payments if p.get("ct","") == "nsfw")
-    sfw = sum(p.get("a",0) for p in payments if p.get("ct","") == "sfw")
-    return {
-        "entries": [{"date":p.get("d",""),"model":p.get("m",""),"amount":p.get("a",0),"source":p.get("s",""),"type":p.get("ct","sfw")} for p in payments],
-        "total": total, "nsfw": nsfw, "sfw": sfw
-    }
+    return {"entries":[{"date":p.get("d",""),"model":p.get("m",""),"amount":p.get("a",0),"source":p.get("s","")} for p in payments],"total":sum(p.get("a",0) for p in payments)}
 
+class RevEntry(BaseModel):
+    amount: int; model: str; source: str
+
+@app.post("/api/revenue/add")
+def add_revenue(entry: RevEntry):
+    _, _, d = get_data()
+    d.setdefault("payments", []).append({"d":datetime.date.today().isoformat(),"m":entry.model,"a":entry.amount,"s":entry.source})
+    save_data(d); return {"ok":True}
+
+@app.post("/api/revenue/delete")
+def delete_revenue(data: dict):
+    _, _, d = get_data()
+    idx = data.get("index")
+    payments = d.get("payments", [])
+    if 0 <= idx < len(payments):
+        payments.pop(idx)
+        save_data(d)
+    return {"ok":True}
+
+# ── CAPTIONS ──
 @app.get("/api/captions")
 def get_captions():
-    _, _, d = get_data()
-    return d.get("captions", [])
+    _, _, d = get_data(); return d.get("captions", [])
 
+class CaptionEntry(BaseModel):
+    model: str; text: str; tags: Optional[str] = ""
+
+@app.post("/api/captions/add")
+def add_caption(entry: CaptionEntry):
+    _, _, d = get_data()
+    d.setdefault("captions", []).append({"model":entry.model,"text":entry.text,"tags":entry.tags or ""})
+    save_data(d); return {"ok":True}
+
+@app.post("/api/captions/delete")
+def delete_caption(data: dict):
+    _, _, d = get_data()
+    idx = data.get("index")
+    caps = d.get("captions", [])
+    if 0 <= idx < len(caps):
+        caps.pop(idx)
+        save_data(d)
+    return {"ok":True}
+
+# ── SCRAPING ──
 @app.get("/api/scraping")
 def get_scraping():
-    _, _, d = get_data()
-    return {"data": d.get("scraping", [])}
+    _, _, d = get_data(); return d.get("scraping", [])
 
-@app.get("/api/dms")
-def get_dms():
-    _, _, d = get_data()
-    return {"data": d.get("dms", [
-        {"from":"@user1","preview":"How do I get VIP?","source":"X","type":"nsfw","time":"5 min ago","action":"reply"},
-        {"from":"@user2","preview":"Telegram link?","source":"OkCupid","type":"sfw","time":"12 min ago","action":"link"},
-        {"from":"@sub1","preview":"You're so pretty","source":"Reddit","type":"sfw","time":"1h ago","action":"reply"},
-        {"from":"@buyer1","preview":"Sending payment now","source":"Telegram","type":"nsfw","time":"2h ago","action":"payment"},
-    ])}
+class ScrapeEntry(BaseModel):
+    model: str; target_vibes: Optional[str] = ""; target_accounts: Optional[str] = ""; hashtags: Optional[str] = ""
 
+@app.post("/api/scraping/update")
+def update_scraping(entry: ScrapeEntry):
+    _, _, d = get_data()
+    scraper = d.setdefault("scraping", [])
+    for i, s in enumerate(scraper):
+        if s["model"] == entry.model:
+            scraper[i] = {"model":entry.model,"target_vibes":entry.target_vibes or "","target_accounts":entry.target_accounts or "","hashtags":entry.hashtags or "","last_scraped":"Not started"}
+            save_data(d); return {"ok":True}
+    scraper.append({"model":entry.model,"target_vibes":entry.target_vibes or "","target_accounts":entry.target_accounts or "","hashtags":entry.hashtags or "","last_scraped":"Not started"})
+    save_data(d); return {"ok":True}
+
+# ── GALLERY ──
 @app.get("/api/gallery")
 def get_gallery():
-    _, _, d = get_data()
-    return {"data": d.get("gallery", [])}
+    _, _, d = get_data(); return {"data": d.get("gallery", [])}
 
+@app.post("/api/gallery/add")
+def add_gallery(data: dict):
+    _, _, d = get_data()
+    d.setdefault("gallery", []).append({"model":data.get("model","?"),"file":data.get("file",""),"tag":data.get("tag","pending")})
+    save_data(d); return {"ok":True}
+
+@app.post("/api/gallery/tag")
+def tag_gallery(data: dict):
+    _, _, d = get_data()
+    gal = d.get("gallery", [])
+    idx, tag = data.get("index"), data.get("tag","pending")
+    if 0 <= idx < len(gal):
+        gal[idx]["tag"] = tag
+        save_data(d)
+    return {"ok":True}
+
+# ── PIPELINE ──
 @app.get("/api/pipeline")
 def get_pipeline():
     _, _, d = get_data()
     pipe = d.get("pipeline", {})
-    # Return NSFW and SFW pipeline status per model
     result = {}
     for m in d.get("models", DEFAULT_MODELS):
-        name = m["name"].lower()
-        nsfw = pipe.get(f"{name}_nsfw", {"train":"idle","gen":"idle","validate":"idle","strip":"idle","post":"idle"})
-        sfw = pipe.get(f"{name}_sfw", {"train":"idle","gen":"idle","validate":"idle","post":"idle"})
-        result[f"{name}_nsfw"] = nsfw
-        result[f"{name}_sfw"] = sfw
+        n = m["name"].lower()
+        for t in ("nsfw","sfw"):
+            key = f"{n}_{t}"
+            result[key] = pipe.get(key, {"train":"idle","generate":"idle","validate":"idle","post":"idle"})
+            if t == "nsfw":
+                result[key]["strip"] = pipe.get(key, {}).get("strip","idle")
     return result
 
-# ── Pipeline trigger ──
-class PipelineTrigger(BaseModel):
-    model: str
-    content_type: str  # "nsfw" or "sfw"
-    step: str  # "train", "generate", "validate", "strip", "post"
+class PipeTrigger(BaseModel):
+    model: str; content_type: str; step: str
 
 @app.post("/api/pipeline/trigger")
-def trigger_pipeline(req: PipelineTrigger):
+def trigger_pipeline(req: PipeTrigger):
     _, _, d = get_data()
     pipe = d.setdefault("pipeline", {})
     key = f"{req.model.lower()}_{req.content_type}"
-    step_data = pipe.setdefault(key, {})
-    step_data[req.step] = "running"
+    pipe.setdefault(key, {})[req.step] = "running"
     save_data(d)
-    # In real operation, this would fork the actual script
-    return {"ok": True, "model": req.model, "type": req.content_type, "step": req.step, "status": "running"}
+    return {"ok":True,"status":"running"}
 
 @app.post("/api/pipeline/update")
-def update_pipeline(req: PipelineTrigger):
+def update_pipeline(req: PipeTrigger):
     _, _, d = get_data()
     pipe = d.setdefault("pipeline", {})
-    key = f"{req.model.lower()}_{req.content_type}"
-    step_data = pipe.setdefault(key, {})
-    step_data[req.step] = "done"
-    save_data(d)
-    return {"ok": True}
+    pipe.setdefault(f"{req.model.lower()}_{req.content_type}", {})[req.step] = req.step if req.step != "done" else "done"
+    save_data(d); return {"ok":True}
 
-# ── Revenue entry ──
-class RevEntry(BaseModel):
-    amount: int; model: str; source: str; content_type: Optional[str] = "sfw"
+# ── ACCOUNTS ──
+@app.get("/api/accounts")
+def get_accounts():
+    _, _, d = get_data(); return d.get("accounts", [])
 
-@app.post("/api/revenue/add")
-def add_revenue(entry: RevEntry):
-    svc, fid, d = get_data()
-    d.setdefault("payments", []).append({
-        "d": datetime.date.today().isoformat(),
-        "m": entry.model, "a": entry.amount,
-        "s": entry.source, "ct": entry.content_type
-    })
-    write_drive_json(svc, fid, "data.json", d)
-    return {"ok": True}
+class AccountEntry(BaseModel):
+    model: str; platform: str; username: Optional[str] = ""; status: Optional[str] = "uncreated"; warmup: Optional[int] = 0; followers: Optional[int] = 0
 
-# ── Model CRUD ──
-@app.post("/api/models/add")
-def add_model(model: dict):
-    svc, fid, d = get_data()
-    d.setdefault("models", []).append({
-        "name": model["name"], "persona": model.get("persona",""),
-        "status": "setup", "revenue": 0, "vips": 0, "images": 0,
-        "followers": 0, "platforms": model.get("platforms",["X"]),
-        "nsfw_lora": "missing", "sfw_lora": "missing",
-        "nsfw_images": 0, "sfw_images": 0
-    })
-    write_drive_json(svc, fid, "data.json", d)
-    return {"ok": True}
+@app.post("/api/accounts/update")
+def update_account(entry: AccountEntry):
+    _, _, d = get_data()
+    accts = d.setdefault("accounts", [])
+    for i, a in enumerate(accts):
+        if a.get("model") == entry.model and a.get("platform") == entry.platform:
+            accts[i] = entry.dict(); save_data(d); return {"ok":True}
+    accts.append(entry.dict()); save_data(d); return {"ok":True}
 
+# ── HUB (ideas/reminders) ──
+@app.get("/api/hub")
+def get_hub():
+    _, _, d = get_data()
+    return {
+        "reminders": d.get("reminders", [
+            {"text":"Check accounts for bans/suspensions","done":False},
+            {"text":"Post to X at least once per model","done":False},
+            {"text":"Reply to DMs across all platforms","done":False},
+            {"text":"Log any revenue from today","done":False},
+            {"text":"Review daily ideas for posting","done":False},
+        ]),
+        "ideas": d.get("ideas", [
+            {"model":"Annie","idea":"Dorm room mirror selfie - 'new fit what we think'","date":"Today"},
+            {"model":"Yesha","idea":"Gym pump pic - 'leg day done right'","date":"Today"},
+            {"model":"Jasmine","idea":"Tattoo reveal shot - 'inked and unbothered'","date":"Today"},
+        ])
+    }
+
+@app.post("/api/hub/reminder/toggle")
+def toggle_reminder(data: dict):
+    _, _, d = get_data()
+    reminders = d.setdefault("reminders", [])
+    idx = data.get("index")
+    if 0 <= idx < len(reminders):
+        reminders[idx]["done"] = not reminders[idx].get("done",False)
+        save_data(d)
+    return {"ok":True}
+
+# ── SETTINGS ──
+@app.get("/api/settings")
+def get_settings():
+    return {"drive_status": "connected" if MEMORY.get("_drive") else "memory_only"}
+
+# ── ROOT ──
 @app.get("/", response_class=HTMLResponse)
 def index():
     html = Path(__file__).parent / "dashboard.html"
     return html.read_text() if html.exists() else "<h1>Dashboard</h1>"
-# Mount dashboard HTML — no static dir needed (all CSS/JS is inline)
+
 HERE = Path(__file__).parent
 
 def main():
