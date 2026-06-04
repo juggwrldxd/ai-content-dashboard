@@ -11,6 +11,9 @@ from typing import Optional
 # ── GOOGLE DRIVE SETUP ──
 DRIVE_FOLDER = "ai_content_business_data"
 
+# ── In-memory fallback for when Drive token isn't available ──
+MEMORY = {"models":[],"payments":[],"vip_members":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
+
 def get_drive():
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
@@ -19,6 +22,8 @@ def get_drive():
         creds = Credentials.from_authorized_user_info(json.loads(token_json))
     else:
         token_path = os.environ.get("GOOGLE_TOKEN_PATH", str(Path.home() / ".hermes" / "google_token.json"))
+        if not os.path.exists(token_path):
+            raise RuntimeError("NO_DRIVE")
         with open(token_path) as f:
             creds = Credentials.from_authorized_user_info(json.load(f))
     return build("drive", "v3", credentials=creds)
@@ -57,15 +62,28 @@ def write_drive_json(service, folder_id, filename, data):
         service.files().create(body=meta, media_body=media_obj).execute()
 
 def get_data():
-    svc = get_drive()
-    fid = get_or_create_folder(svc, DRIVE_FOLDER)
-    d = read_drive_json(svc, fid, "data.json")
-    return svc, fid, d
+    try:
+        svc = get_drive()
+        fid = get_or_create_folder(svc, DRIVE_FOLDER)
+        d = read_drive_json(svc, fid, "data.json")
+        MEMORY.clear()
+        MEMORY.update(d)
+        MEMORY["_drive"] = True
+        return svc, fid, MEMORY
+    except (RuntimeError, FileNotFoundError, Exception):
+        # No Drive token — use in-memory data
+        if "models" not in MEMORY or not MEMORY["models"]:
+            MEMORY["models"] = DEFAULT_MODELS
+        return None, None, MEMORY
 
 def save_data(data):
-    svc = get_drive()
-    fid = get_or_create_folder(svc, DRIVE_FOLDER)
-    write_drive_json(svc, fid, "data.json", data)
+    if data.get("_drive"):
+        try:
+            svc = get_drive()
+            fid = get_or_create_folder(svc, DRIVE_FOLDER)
+            write_drive_json(svc, fid, "data.json", {k:v for k,v in data.items() if not k.startswith("_")})
+        except:
+            pass  # silently fall back to memory
 
 # ── Default models ──
 DEFAULT_MODELS = [
