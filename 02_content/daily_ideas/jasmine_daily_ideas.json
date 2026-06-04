@@ -1,66 +1,66 @@
 {
   "model": "jasmine",
   "persona": "Alternative / Tattoo Baddie \u2014 21, barista, punk vibes. Dark aesthetic, piercings, edgy style. Cool and mysterious.",
-  "date": "2026-06-03",
+  "date": "2026-06-04",
   "ideas": [
     {
-      "id": "jasmine_2026-06-03_1",
+      "id": "jasmine_2026-06-04_1",
       "model": "jasmine",
-      "date": "2026-06-03",
-      "image_reference": "jasmine/jasmine_20260603_01.png",
-      "image_description": "A band tee OOTD shot with sarcastic energy",
-      "caption": "oh you're into me? how original \ud83d\ude44",
-      "hashtags": [
-        "#alternative",
-        "#piercings",
-        "#altgirl",
-        "#tattooedgirls"
-      ],
-      "best_platform": "X",
-      "best_time": "08:00 PM UTC",
-      "caption_style": "sarcastic",
-      "vibe": "band tee OOTD",
-      "generated_at": "2026-06-03T10:40:48.259805Z"
-    },
-    {
-      "id": "jasmine_2026-06-03_2",
-      "model": "jasmine",
-      "date": "2026-06-03",
-      "image_reference": "jasmine/jasmine_20260603_02.png",
-      "image_description": "A tattoo reveal shot with sarcastic energy",
-      "caption": "oh you're into me? how original \ud83d\ude44",
-      "hashtags": [
-        "#tattooedgirls",
-        "#rebel",
-        "#alternative",
-        "#goth"
-      ],
-      "best_platform": "Telegram",
-      "best_time": "12:00 PM UTC",
-      "caption_style": "sarcastic",
-      "vibe": "tattoo reveal",
-      "generated_at": "2026-06-03T10:40:48.259814Z"
-    },
-    {
-      "id": "jasmine_2026-06-03_3",
-      "model": "jasmine",
-      "date": "2026-06-03",
-      "image_reference": "jasmine/jasmine_20260603_03.png",
-      "image_description": "A rainy street shot with anti-mainstream energy",
+      "date": "2026-06-04",
+      "image_reference": "jasmine/jasmine_20260604_01.png",
+      "image_description": "A dark bedroom shot with anti-mainstream energy",
       "caption": "basic is boring. glad you found me instead. \ud83e\udd87",
       "hashtags": [
+        "#rebel",
+        "#darkaesthetic",
         "#piercings",
-        "#altgirl",
-        "#alternative",
-        "#tattooedgirls"
+        "#edgy"
       ],
-      "best_platform": "X",
-      "best_time": "06:00 PM UTC",
+      "best_platform": "Reddit",
+      "best_time": "02:00 PM UTC",
       "caption_style": "anti-mainstream",
+      "vibe": "dark bedroom",
+      "generated_at": "2026-06-04T18:24:30.747977Z"
+    },
+    {
+      "id": "jasmine_2026-06-04_2",
+      "model": "jasmine",
+      "date": "2026-06-04",
+      "image_reference": "jasmine/jasmine_20260604_02.png",
+      "image_description": "A band tee OOTD shot with anti-mainstream energy",
+      "caption": "basic is boring. glad you found me instead. \ud83e\udd87",
+      "hashtags": [
+        "#tattooedgirls",
+        "#altgirl",
+        "#edgy",
+        "#goth"
+      ],
+      "best_platform": "Reddit",
+      "best_time": "07:00 AM UTC",
+      "caption_style": "anti-mainstream",
+      "vibe": "band tee OOTD",
+      "generated_at": "2026-06-04T18:24:30.747984Z"
+    },
+    {
+      "id": "jasmine_2026-06-04_3",
+      "model": "jasmine",
+      "date": "2026-06-04",
+      "image_reference": "jasmine/jasmine_20260604_03.png",
+      "image_description": "A rainy street shot with edgy and mysterious energy",
+      "caption": "i'm not for everyone. and i'm okay with that.\ud83d\udda4",
+      "hashtags": [
+        "#altgirl",
+        "#edgy",
+        "#tattooedgirls",
+        "#alternative"
+      ],
+      "best_platform": "Telegram",
+      "best_time": "06:00 PM UTC",
+      "caption_style": "edgy and mysterious",
       "vibe": "rainy street",
-      "generated_at": "2026-06-03T10:40:48.259819Z"
+      "generated_at": "2026-06-04T18:24:30.747991Z"
     }
   ],
-  "generated_at": "2026-06-03T10:40:48.259823Z",
+  "generated_at": "2026-06-04T18:24:30.747995Z",
   "mode": "placeholder"
 }
