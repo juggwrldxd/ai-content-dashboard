@@ -61,6 +61,8 @@ def get_data():
         return svc, fid, MEMORY
     except:
         MEMORY.setdefault("models", DEFAULT_MODELS)
+        if not MEMORY["models"] or any("lora_status" in m for m in MEMORY["models"]):
+            MEMORY["models"] = DEFAULT_MODELS
         return None, None, MEMORY
 
 def save_data(data):
