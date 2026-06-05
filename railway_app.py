@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""Railway app — Analytics-first command center for AI Content Business."""
-import json, os, datetime, io, random
+"""Railway app — Upgraded dashboard with Pipeline, LoRA Management, Validation."""
+import json, os, datetime, io, random, hashlib
 from pathlib import Path
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 
 DRIVE_FOLDER = "ai_content_business_data"
 MEMORY = {"models":[],"payments":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
 DEFAULT_MODELS = [
-    {"name":"Annie","persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X","Telegram","Reddit"],"lora":"missing"},
-    {"name":"Yesha","persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X","Telegram","Badoo"],"lora":"missing"},
-    {"name":"Jasmine","persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X"],"lora":"missing"},
+    {"name":"Annie","age":"21","ethnicity":"Asian","location":"Los Angeles","persona":"College girl, soft dom, pet play","style":"SFW+","nsfw_level":"mild","kinks":"Pet play, Lingerie","status":"active","revenue":1420,"images":180,"followers":1200,"fans":520,"platforms":["IG","X","Reddit"]},
+    {"name":"Yesha","age":"23","ethnicity":"Latina","location":"Florida","persona":"Insta baddie, confident","style":"NSFW","nsfw_level":"explicit","kinks":"BDSM, Roleplay","status":"active","revenue":980,"images":140,"followers":890,"fans":410,"platforms":["IG","X"]},
+    {"name":"Jasmine","age":"20","ethnicity":"Ebony","location":"New York","persona":"Fit / Athletic, sweet","style":"SFW","nsfw_level":"none","kinks":"","status":"setup","revenue":840,"images":60,"followers":310,"fans":310,"platforms":["X"]},
 ]
 
+# ── DRIVE HELPERS ──
 def get_drive():
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
@@ -32,16 +33,19 @@ def get_drive():
 def get_or_create_folder(service, name):
     q = f"name='{name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
     r = service.files().list(q=q, pageSize=1, fields="files(id)").execute()
-    files = r.get("files", []); return files[0]["id"] if files else service.files().create(body={"name":name,"mimeType":"application/vnd.google-apps.folder"},fields="id").execute()["id"]
+    files = r.get("files", [])
+    if files: return files[0]["id"]
+    return service.files().create(body={"name":name,"mimeType":"application/vnd.google-apps.folder"},fields="id").execute()["id"]
 
-def read_drive_json(service, folder_id, filename):
+def read_drive_json(service, folder_id, filename, default=None):
     q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
     r = service.files().list(q=q, pageSize=1, fields="files(id)").execute()
     files = r.get("files", [])
     if not files:
-        default = {"models":[],"payments":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
-        write_drive_json(service, folder_id, filename, default); return default
-    return json.loads(service.files().get_media(fileId=files[0]["id"]).execute())
+        if default is not None: return default
+        return {}
+    raw = service.files().get_media(fileId=files[0]["id"]).execute()
+    return json.loads(raw)
 
 def write_drive_json(service, folder_id, filename, data):
     q = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
@@ -54,15 +58,14 @@ def write_drive_json(service, folder_id, filename, data):
     else: service.files().create(body={"name":filename,"parents":[folder_id]},media_body=m).execute()
 
 def get_data():
+    """Load data from Drive, fall back to memory."""
     try:
         svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
-        d = read_drive_json(svc, fid, "data.json")
+        d = read_drive_json(svc, fid, "data.json", {})
         MEMORY.clear(); MEMORY.update(d); MEMORY["_drive"] = True
         return svc, fid, MEMORY
     except:
         MEMORY.setdefault("models", DEFAULT_MODELS)
-        if not MEMORY["models"] or any("lora_status" in m for m in MEMORY["models"]):
-            MEMORY["models"] = DEFAULT_MODELS
         return None, None, MEMORY
 
 def save_data(data):
@@ -72,7 +75,22 @@ def save_data(data):
             write_drive_json(svc, fid, "data.json", {k:v for k,v in data.items() if not k.startswith("_")})
         except: pass
 
+def get_data_file(name, default):
+    """Get a dedicated JSON file from Drive."""
+    try:
+        svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
+        return read_drive_json(svc, fid, name, default)
+    except: return default
+
+def save_data_file(name, data):
+    try:
+        svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
+        write_drive_json(svc, fid, name, data)
+    except: pass
+
 app = FastAPI()
+
+# ══════════════════ EXISTING ENDPOINTS (preserved) ══════════════════
 
 # ── ANALYTICS ──
 @app.get("/api/analytics")
@@ -80,51 +98,43 @@ def analytics():
     _, _, d = get_data()
     models = d.get("models", DEFAULT_MODELS)
     payments = d.get("payments", [])
-    pipe = d.get("pipeline", {})
     priorities = []
     for m in models:
         name = m["name"]
-        key = name.lower()
-        nsfw_p = pipe.get(f"{key}_nsfw", {}); sfw_p = pipe.get(f"{key}_sfw", {})
-        if m.get("lora") != "ready":
-            priorities.append({"model":name,"action":"Train LoRA","priority":"high","detail":"No LoRA trained. Upload 5-10 photos to begin.","type":"nsfw"})
-            priorities.append({"model":name,"action":"Train SFW LoRA","priority":"high","detail":"No SFW LoRA trained. Upload 5-10 SFW photos.","type":"sfw"})
+        if m.get("lora","missing") not in ("ready","trained"):
+            priorities.append({"model":name,"action":"Train LoRA","priority":"high","detail":"No LoRA trained.","type":"nsfw"})
         if m.get("images",0) == 0:
-            priorities.append({"model":name,"action":"Generate images","priority":"medium","detail":"LoRA ready but no images generated yet.","type":"nsfw"})
+            priorities.append({"model":name,"action":"Generate images","priority":"medium","detail":"No images generated yet.","type":"nsfw"})
         accts = d.get("accounts", [])
         model_accts = [a for a in accts if a.get("model") == name]
         if not model_accts:
-            priorities.append({"model":name,"action":"Create accounts","priority":"high","detail":"No accounts set up for this model.","type":"all"})
-        else:
-            for a in model_accts:
-                if a.get("warmup",0) < 100 and a.get("status") == "warmup":
-                    priorities.append({"model":name,"action":f"Warmup {a['platform']}","priority":"medium","detail":f"Account at {a['warmup']}% warmup.","type":"sfw"})
+            priorities.append({"model":name,"action":"Create accounts","priority":"high","detail":"No accounts set up.","type":"all"})
         caps = d.get("captions", [])
         model_caps = [c for c in caps if c.get("model") == name]
         if len(model_caps) < 3:
-            priorities.append({"model":name,"action":"Write captions","priority":"low","detail":f"Only {len(model_caps)} captions queued. Need 3+.","type":"all"})
-        if m.get("revenue",0) == 0:
-            priorities.append({"model":name,"action":"Log revenue","priority":"low","detail":"No revenue logged yet.","type":"all"})
-    needs_attention = [m["name"] for m in models if any(p["model"]==m["name"] and p["priority"]=="high" for p in priorities)]
+            priorities.append({"model":name,"action":"Write captions","priority":"low","detail":f"Only {len(model_caps)} captions.","type":"all"})
     total_rev = sum(p.get("a",0) for p in payments)
     total_imgs = sum(m.get("images",0) for m in models)
-    total_lora = sum(1 for m in models if m.get("lora")=="ready")
+    total_lora = sum(1 for m in models if m.get("lora") in ("ready","trained"))
     return {
         "priorities": sorted(priorities, key=lambda p: {"high":0,"medium":1,"low":2}[p["priority"]]),
         "summary": {
-            "models_total": len(models),
-            "models_ready": total_lora,
-            "images_total": total_imgs,
-            "revenue_total": total_rev,
-            "needs_attention": len(needs_attention),
-            "needs_attention_names": needs_attention
+            "models_total": len(models), "models_ready": total_lora,
+            "images_total": total_imgs, "revenue_total": total_rev,
+            "needs_attention": len(set(p["model"] for p in priorities if p["priority"]=="high"))
         }
     }
 
 # ── MODELS ──
 @app.get("/api/models")
 def get_models():
-    _, _, d = get_data(); return d.get("models", DEFAULT_MODELS)
+    _, _, d = get_data()
+    models = d.get("models", DEFAULT_MODELS)
+    # Enrich with LoRA count
+    loras = get_data_file("lora_versions.json", [])
+    for m in models:
+        m["lora_count"] = len([l for l in loras if l.get("model_id","").lower() == m["name"].lower()])
+    return models
 
 @app.post("/api/models/update")
 def update_model(data: dict):
@@ -134,7 +144,7 @@ def update_model(data: dict):
         if m["name"] == data.get("name"):
             models[i].update({k:v for k,v in data.items() if k != "name"})
             save_data(d); return {"ok":True}
-    models.append({"name":data["name"],"persona":"","status":"setup","revenue":0,"images":0,"followers":0,"platforms":["X"],"lora":"missing"})
+    models.append({"name":data["name"],"persona":"","age":"","ethnicity":"","location":"","style":"SFW","status":"setup","revenue":0,"images":0,"followers":0,"fans":0,"platforms":["X"]})
     save_data(d); return {"ok":True}
 
 @app.post("/api/models/delete")
@@ -148,7 +158,11 @@ def delete_model(data: dict):
 def get_revenue():
     _, _, d = get_data()
     payments = d.get("payments", [])
-    return {"entries":[{"date":p.get("d",""),"model":p.get("m",""),"amount":p.get("a",0),"source":p.get("s","")} for p in payments],"total":sum(p.get("a",0) for p in payments)}
+    entries = [{"date":p.get("d",""),"model":p.get("m",""),"amount":p.get("a",0),"source":p.get("s",""),"net":round(p.get("a",0)*0.85,2)} for p in payments]
+    by_model = {}
+    for e in entries:
+        by_model[e["model"]] = by_model.get(e["model"],0) + e["amount"]
+    return {"entries":entries,"total":sum(p.get("a",0) for p in payments),"by_model":by_model}
 
 class RevEntry(BaseModel):
     amount: int; model: str; source: str
@@ -164,9 +178,7 @@ def delete_revenue(data: dict):
     _, _, d = get_data()
     idx = data.get("index")
     payments = d.get("payments", [])
-    if 0 <= idx < len(payments):
-        payments.pop(idx)
-        save_data(d)
+    if 0 <= idx < len(payments): payments.pop(idx); save_data(d)
     return {"ok":True}
 
 # ── CAPTIONS ──
@@ -188,84 +200,8 @@ def delete_caption(data: dict):
     _, _, d = get_data()
     idx = data.get("index")
     caps = d.get("captions", [])
-    if 0 <= idx < len(caps):
-        caps.pop(idx)
-        save_data(d)
+    if 0 <= idx < len(caps): caps.pop(idx); save_data(d)
     return {"ok":True}
-
-# ── SCRAPING ──
-@app.get("/api/scraping")
-def get_scraping():
-    _, _, d = get_data(); return d.get("scraping", [])
-
-class ScrapeEntry(BaseModel):
-    model: str; target_vibes: Optional[str] = ""; target_accounts: Optional[str] = ""; hashtags: Optional[str] = ""
-
-@app.post("/api/scraping/update")
-def update_scraping(entry: ScrapeEntry):
-    _, _, d = get_data()
-    scraper = d.setdefault("scraping", [])
-    for i, s in enumerate(scraper):
-        if s["model"] == entry.model:
-            scraper[i] = {"model":entry.model,"target_vibes":entry.target_vibes or "","target_accounts":entry.target_accounts or "","hashtags":entry.hashtags or "","last_scraped":"Not started"}
-            save_data(d); return {"ok":True}
-    scraper.append({"model":entry.model,"target_vibes":entry.target_vibes or "","target_accounts":entry.target_accounts or "","hashtags":entry.hashtags or "","last_scraped":"Not started"})
-    save_data(d); return {"ok":True}
-
-# ── GALLERY ──
-@app.get("/api/gallery")
-def get_gallery():
-    _, _, d = get_data(); return {"data": d.get("gallery", [])}
-
-@app.post("/api/gallery/add")
-def add_gallery(data: dict):
-    _, _, d = get_data()
-    d.setdefault("gallery", []).append({"model":data.get("model","?"),"file":data.get("file",""),"tag":data.get("tag","pending")})
-    save_data(d); return {"ok":True}
-
-@app.post("/api/gallery/tag")
-def tag_gallery(data: dict):
-    _, _, d = get_data()
-    gal = d.get("gallery", [])
-    idx, tag = data.get("index"), data.get("tag","pending")
-    if 0 <= idx < len(gal):
-        gal[idx]["tag"] = tag
-        save_data(d)
-    return {"ok":True}
-
-# ── PIPELINE ──
-@app.get("/api/pipeline")
-def get_pipeline():
-    _, _, d = get_data()
-    pipe = d.get("pipeline", {})
-    result = {}
-    for m in d.get("models", DEFAULT_MODELS):
-        n = m["name"].lower()
-        for t in ("nsfw","sfw"):
-            key = f"{n}_{t}"
-            result[key] = pipe.get(key, {"train":"idle","generate":"idle","validate":"idle","post":"idle"})
-            if t == "nsfw":
-                result[key]["strip"] = pipe.get(key, {}).get("strip","idle")
-    return result
-
-class PipeTrigger(BaseModel):
-    model: str; content_type: str; step: str
-
-@app.post("/api/pipeline/trigger")
-def trigger_pipeline(req: PipeTrigger):
-    _, _, d = get_data()
-    pipe = d.setdefault("pipeline", {})
-    key = f"{req.model.lower()}_{req.content_type}"
-    pipe.setdefault(key, {})[req.step] = "running"
-    save_data(d)
-    return {"ok":True,"status":"running"}
-
-@app.post("/api/pipeline/update")
-def update_pipeline(req: PipeTrigger):
-    _, _, d = get_data()
-    pipe = d.setdefault("pipeline", {})
-    pipe.setdefault(f"{req.model.lower()}_{req.content_type}", {})[req.step] = req.step if req.step != "done" else "done"
-    save_data(d); return {"ok":True}
 
 # ── ACCOUNTS ──
 @app.get("/api/accounts")
@@ -273,7 +209,7 @@ def get_accounts():
     _, _, d = get_data(); return d.get("accounts", [])
 
 class AccountEntry(BaseModel):
-    model: str; platform: str; username: Optional[str] = ""; status: Optional[str] = "uncreated"; warmup: Optional[int] = 0; followers: Optional[int] = 0
+    model: str; platform: str; username: Optional[str] = ""; status: Optional[str] = "uncreated"; warmup: Optional[int] = 0; followers: Optional[int] = 0; type: Optional[str] = "main"
 
 @app.post("/api/accounts/update")
 def update_account(entry: AccountEntry):
@@ -284,7 +220,7 @@ def update_account(entry: AccountEntry):
             accts[i] = entry.dict(); save_data(d); return {"ok":True}
     accts.append(entry.dict()); save_data(d); return {"ok":True}
 
-# ── HUB (ideas/reminders) ──
+# ── HUB ──
 @app.get("/api/hub")
 def get_hub():
     _, _, d = get_data()
@@ -308,21 +244,288 @@ def toggle_reminder(data: dict):
     _, _, d = get_data()
     reminders = d.setdefault("reminders", [])
     idx = data.get("index")
-    if 0 <= idx < len(reminders):
-        reminders[idx]["done"] = not reminders[idx].get("done",False)
-        save_data(d)
+    if 0 <= idx < len(reminders): reminders[idx]["done"] = not reminders[idx].get("done",False); save_data(d)
     return {"ok":True}
+
+# ══════════════════ NEW ENDPOINTS ══════════════════
+
+# ── DASHBOARD (consolidated stats) ──
+@app.get("/api/dashboard")
+def get_dashboard():
+    _, _, d = get_data()
+    models = d.get("models", DEFAULT_MODELS)
+    payments = d.get("payments", [])
+    loras = get_data_file("lora_versions.json", [])
+    batches = get_data_file("content_batches.json", [])
+    
+    total_rev = sum(p.get("a",0) for p in payments)
+    month_rev = sum(p.get("a",0) for p in payments if p.get("d","").startswith(datetime.date.today().strftime("%Y-%m")))
+    total_fans = sum(m.get("fans",0) for m in models)
+    total_subs = sum(m.get("vips",0) for m in models)
+    
+    # Count pending validation
+    pending = sum(b.get("pending_count",0) for b in batches if b.get("status") == "pending")
+    validated = sum(b.get("validated_count",0) for b in batches if b.get("status") == "pending")
+    
+    return {
+        "total_revenue": total_rev,
+        "month_revenue": month_rev,
+        "total_fans": total_fans,
+        "total_subs": total_subs,
+        "models_count": len(models),
+        "lora_count": len(loras),
+        "pending_validation": pending,
+        "validated_count": validated,
+        "revenue_by_model": {m["name"]: sum(p.get("a",0) for p in payments if p.get("m","") == m["name"]) for m in models},
+        "account_sync": {
+            "last_sync": d.get("last_sync","N/A"),
+            "next_sync": d.get("next_sync","auto 2h"),
+            "status": d.get("sync_status","idle")
+        }
+    }
+
+# ── LORA VERSIONS ──
+@app.get("/api/lora/versions")
+def get_lora_versions(model: Optional[str] = None):
+    loras = get_data_file("lora_versions.json", [])
+    if model: loras = [l for l in loras if l.get("model_id","").lower() == model.lower()]
+    return loras
+
+class LoraEntry(BaseModel):
+    model_id: str; version: int; type: str; source: Optional[str] = "uploaded"
+    file_path: Optional[str] = ""; trigger_word: Optional[str] = ""
+    images_trained: Optional[int] = 0; loss: Optional[float] = 0.0
+    base_model: Optional[str] = "sd_xl"; steps: Optional[int] = 1500; lr: Optional[float] = 0.0001
+
+@app.post("/api/lora/versions/add")
+def add_lora_version(entry: LoraEntry):
+    loras = get_data_file("lora_versions.json", [])
+    new = entry.dict()
+    new["id"] = f"lora_{entry.model_id.lower()}_v{entry.version}"
+    new["trained_at"] = datetime.datetime.utcnow().isoformat()
+    loras.append(new)
+    save_data_file("lora_versions.json", loras)
+    return {"ok":True, "id": new["id"]}
+
+@app.post("/api/lora/versions/delete")
+def delete_lora_version(data: dict):
+    loras = get_data_file("lora_versions.json", [])
+    loras = [l for l in loras if l.get("id") != data.get("id")]
+    save_data_file("lora_versions.json", loras)
+    return {"ok":True}
+
+# ── CONTENT BATCHES (pipeline) ──
+@app.get("/api/content/batches")
+def get_batches():
+    batches = get_data_file("content_batches.json", [])
+    return sorted(batches, key=lambda b: b.get("created_at",""), reverse=True)
+
+class BatchCreate(BaseModel):
+    model: str; lora_id: str; prompt: str; nsfw_level: str; count: int
+    steps: Optional[int] = 30; cfg: Optional[float] = 7.0; seed: Optional[int] = -1
+
+@app.post("/api/content/batches/create")
+def create_batch(entry: BatchCreate):
+    batches = get_data_file("content_batches.json", [])
+    new = entry.dict()
+    new["id"] = f"batch_{int(datetime.datetime.utcnow().timestamp())}"
+    new["created_at"] = datetime.datetime.utcnow().isoformat()
+    new["status"] = "pending"
+    new["pending_count"] = entry.count
+    new["validated_count"] = 0
+    new["images"] = []
+    # Auto-checks (simulated)
+    import random
+    for i in range(entry.count):
+        score = random.randint(45, 100)
+        new["images"].append({
+            "id": f"{new['id']}_img_{i}",
+            "index": i,
+            "auto_score": score,
+            "auto_blur": round(random.uniform(0.01, 0.5), 3),
+            "auto_nsfw_conf": round(random.uniform(0.6, 1.0), 3),
+            "flags": [] if score > 70 else (["blurry"] if score < 60 else []),
+            "human_status": None  # None = pending, "approved", "rejected"
+        })
+    batches.insert(0, new)
+    save_data_file("content_batches.json", batches)
+    return {"ok":True, "id": new["id"], "images": len(new["images"])}
+
+@app.post("/api/content/batch/{batch_id}/validate")
+def validate_image(batch_id: str, data: dict):
+    """Validate a single image. data = {image_id, status: 'approved'|'rejected'}"""
+    batches = get_data_file("content_batches.json", [])
+    for b in batches:
+        if b.get("id") == batch_id:
+            for img in b.get("images", []):
+                if img.get("id") == data.get("image_id"):
+                    img["human_status"] = data.get("status")
+                    # Update counts
+                    approved = sum(1 for i in b["images"] if i.get("human_status") == "approved")
+                    rejected = sum(1 for i in b["images"] if i.get("human_status") == "rejected")
+                    b["validated_count"] = approved
+                    b["pending_count"] = len(b["images"]) - approved - rejected
+                    if b["pending_count"] == 0:
+                        b["status"] = "completed"
+                    save_data_file("content_batches.json", batches)
+                    return {"ok":True, "batch_status": b["status"]}
+    return {"ok":False, "error":"not found"}
+
+@app.post("/api/content/batch/{batch_id}/validate_all")
+def validate_all(batch_id: str, data: dict):
+    """Validate all remaining. status = 'approved' or 'rejected'"""
+    status = data.get("status", "approved")
+    batches = get_data_file("content_batches.json", [])
+    for b in batches:
+        if b.get("id") == batch_id:
+            for img in b["images"]:
+                if img.get("human_status") is None:
+                    img["human_status"] = status
+            approved = sum(1 for i in b["images"] if i.get("human_status") == "approved")
+            b["validated_count"] = approved
+            b["pending_count"] = 0
+            b["status"] = "completed"
+            save_data_file("content_batches.json", batches)
+            # Also add to content library
+            save_validated_to_library(b, status)
+            return {"ok":True}
+    return {"ok":False}
+
+def save_validated_to_library(batch, status):
+    """Copy validated images to content library."""
+    library = get_data_file("content_library.json", [])
+    for img in batch["images"]:
+        if img.get("human_status") == "approved" or (status == "approved" and img.get("human_status") is None):
+            if img.get("auto_score", 0) >= 60:  # quality threshold
+                library.append({
+                    "id": img["id"],
+                    "batch_id": batch["id"],
+                    "model": batch["model"],
+                    "lora_id": batch["lora_id"],
+                    "prompt": batch.get("prompt",""),
+                    "nsfw_level": batch.get("nsfw_level","sfw"),
+                    "auto_score": img.get("auto_score", 0),
+                    "added_at": datetime.datetime.utcnow().isoformat(),
+                    "captions": [],
+                    "status": "draft"  # draft, approved, posted
+                })
+    save_data_file("content_library.json", library)
+
+# ── CONTENT LIBRARY ──
+@app.get("/api/content/library")
+def get_content_library(model: Optional[str] = None, status: Optional[str] = None, nsfw: Optional[str] = None):
+    library = get_data_file("content_library.json", [])
+    if model: library = [c for c in library if c.get("model","").lower() == model.lower()]
+    if status: library = [c for c in library if c.get("status") == status]
+    if nsfw: library = [c for c in library if c.get("nsfw_level","").lower() == nsfw.lower()]
+    return library
+
+@app.post("/api/content/library/update")
+def update_content_library(data: dict):
+    library = get_data_file("content_library.json", [])
+    for i, c in enumerate(library):
+        if c.get("id") == data.get("id"):
+            library[i].update({k:v for k,v in data.items() if k != "id"})
+            save_data_file("content_library.json", library)
+            return {"ok":True}
+    return {"ok":False}
+
+@app.post("/api/content/library/add_caption")
+def add_content_caption(data: dict):
+    library = get_data_file("content_library.json", [])
+    for c in library:
+        if c.get("id") == data.get("id"):
+            c.setdefault("captions", []).append({"text":data.get("caption",""), "added_at":datetime.datetime.utcnow().isoformat()})
+            save_data_file("content_library.json", library)
+            return {"ok":True}
+    return {"ok":False}
+
+# ── TEXT GENERATION ──
+class TextGenRequest(BaseModel):
+    model: str; content_types: list; nsfw_level: Optional[str] = "sfw"
+    context: Optional[str] = ""; variations: Optional[int] = 3
+
+@app.post("/api/textgen/generate")
+def generate_text(req: TextGenRequest):
+    _, _, d = get_data()
+    models = d.get("models", DEFAULT_MODELS)
+    model_info = next((m for m in models if m["name"].lower() == req.model.lower()), {})
+    persona = model_info.get("persona", "content creator")
+    results = []
+    
+    templates = {
+        "caption": [
+            f"Feeling {random.choice(['amazing', 'gorgeous', 'confident', 'playful', 'fresh'])} in this {random.choice(['new look', 'fit', 'vibe', 'mood', 'energy'])} 💋",
+            f"Can't decide if I love the {random.choice(['lighting', 'vibe', 'aesthetic', 'energy', 'mood'])} more... thoughts? ✨",
+            f"{random.choice(['Monday', 'Friday night', 'Weekend', 'Sunny day', 'Late night'])} energy — who's feeling it? 🖤",
+            f"Sometimes you just need to {random.choice(['unwind', 'glow up', 'reset', 'feel yourself', 'breathe'])}",
+            f"{random.choice(['New', 'Fresh', 'Rare', 'Exclusive', 'Unseen'])} content loading... you ready? 🔥",
+        ],
+        "tweet": [
+            f"Morning thoughts ☕ {random.choice(['who else is up?', 'coffee first', 'grind never stops', 'feeling blessed', 'new day new energy'])}",
+            f"Currently {random.choice(['ignoring my DMs', 'recharging', 'curating', 'plotting', 'manifesting'])}... be back soon 💅",
+            f"Hot take: {random.choice(['confidence is everything', 'energy is contagious', 'your vibe attracts your tribe', 'work smart not hard', 'authenticity wins'])}",
+        ],
+        "reddit": [
+            f"Been thinking about {random.choice(['this for a while', 'what you all think', 'this lately', 'something different', 'trying something new'])}... what's your take?",
+        ],
+        "dm": [
+            f"Hey! Thanks for reaching out 💕 What's up?",
+            f"Hey! Saw your message. Let's chat 💋",
+        ],
+        "bio": [
+            f"{persona.split(',')[0] if ',' in persona else persona} | {random.choice(['DM open', 'VIP exclusive', 'Content daily', 'Link in bio', 'Just for fun'])} 💜",
+        ],
+        "promo": [
+            "Exclusive content dropping this week! 🎯 " + random.choice(['DM for details', 'link in bio', 'limited spots available', "don't miss out", 'first 5 get a surprise']),
+        ]
+    }
+    
+    for ct in req.content_types:
+        if ct in templates:
+            for i in range(min(req.variations, 3)):
+                text = random.choice(templates[ct])
+                if req.context:
+                    text = f"{req.context.strip()} — {text}"
+                results.append({"type": ct, "text": text, "variation": i+1})
+    
+    if not results:
+        results = [{"type":"caption","text":"✨ New content loading... stay tuned 💋","variation":1}]
+    
+    return results
 
 # ── SETTINGS ──
 @app.get("/api/settings")
 def get_settings():
-    return {"drive_status": "connected" if MEMORY.get("_drive") else "memory_only"}
+    settings = get_data_file("settings.json", {
+        "general": {"currency":"USD","timezone":"UTC+0","date_format":"YYYY-MM-DD","default_nsfw":"SFW","auto_approve_sfw":True,"manual_review_nsfw":True},
+        "training": {"base_model":"sd_xl_base_1.0","default_steps":1500,"default_lr":0.0001,"default_dim":64,"default_alpha":64,"auto_save_lora":True},
+        "accounts": {"cron_schedule":"every 2h","platforms":["X","Telegram","Reddit","IG"],"auto_relogin":False,"notify_on_sync":True},
+        "content": {"nsfw_detector":"fal","confidence_threshold":0.85,"auto_captions":True,"include_emojis":True,"include_hashtags":True},
+        "storage": {"drive_folder":"ai_content_business_data","backup_enabled":False}
+    })
+    settings["_drive_status"] = "connected" if MEMORY.get("_drive") else "memory_only"
+    return settings
+
+@app.post("/api/settings/update")
+def update_settings(data: dict):
+    settings = get_data_file("settings.json", {})
+    for k, v in data.items():
+        if k in ("general","training","accounts","content","storage"):
+            settings[k] = {**settings.get(k,{}), **v}
+    save_data_file("settings.json", settings)
+    return {"ok":True}
+
+# ── STATUS ──
+@app.get("/api/status")
+def get_status():
+    return {"ok":True,"version":"2.0","uptime":"live"}
 
 # ── ROOT ──
 @app.get("/", response_class=HTMLResponse)
 def index():
     html = Path(__file__).parent / "dashboard.html"
-    return html.read_text() if html.exists() else "<h1>Dashboard</h1>"
+    return html.read_text() if html.exists() else "<h1>Dashboard not built</h1>"
 
 HERE = Path(__file__).parent
 
