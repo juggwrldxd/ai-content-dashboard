@@ -12,6 +12,17 @@ const CACHE_TTL = 30000; // 30 seconds
 // Track first load for longer timeout
 let isFirstLoad = true;
 
+// ── Single-modal system ──
+function closeAllModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => { m.style.display = 'none'; });
+}
+function openModal(id) {
+  closeAllModals();
+  const el = document.getElementById(id);
+  if(el) el.style.display = 'flex';
+  else console.warn(`Modal #${id} not found`);
+}
+
 function toast(msg, color='#34d399') {
   const t = $('toast');
   t.textContent = msg; t.style.color = color;
@@ -20,6 +31,7 @@ function toast(msg, color='#34d399') {
 }
 
 function switchPage(p) {
+  closeAllModals();
   PAGE = p; selectedModel = null;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const nav = document.querySelector(`.nav-item[data-page="${p}"]`);
@@ -69,7 +81,7 @@ async function load() {
   }
   // Show loading overlay
   const overlay = $('loadingOverlay');
-  if(overlay) overlay.style.display = 'flex';
+  if(overlay) { closeAllModals(); overlay.style.display = 'flex'; }
   await loadPage(PAGE);
   // Cache result + hide overlay
   dataCache = allData;
@@ -594,7 +606,7 @@ async function deleteLora(id) {
 }
 
 function showTrainLora(model, type) {
-  $('trainLoraModal').style.display = 'flex';
+  openModal('trainLoraModal');
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('tlModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
@@ -680,7 +692,7 @@ function renderRevenue() {
 }
 
 function showAddRevenue() {
-  $('addRevModal').style.display = 'flex';
+  openModal('addRevModal');
   // Populate model selector (safe)
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
@@ -739,7 +751,7 @@ async function saveSettingsTraining() {
 
 // ══════════════════ GENERATE MODAL ══════════════════
 function showGenModal(model) {
-  $('genModal').style.display = 'flex';
+  openModal('genModal');
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('gmModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
@@ -953,7 +965,7 @@ async function trainFromSelected() {
 
 // ══════════════════ NAMED DATASETS ══════════════════
 function showCreateDataset() {
-  $('createDatasetModal').style.display = 'flex';
+  openModal('createDatasetModal');
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('cdModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
@@ -1078,7 +1090,7 @@ async function saveModelEdit() {
 
 // ══════════════════ VAULT ══════════════════
 function showVaultModal() {
-  $('vaultModal').style.display = 'flex';
+  openModal('vaultModal');
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('vModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
@@ -1100,7 +1112,7 @@ async function saveVaultEntry() {
 
 // ══════════════════ SOCIAL MONITOR ══════════════════
 function showSocialModal() {
-  $('socialModal').style.display = 'flex';
+  openModal('socialModal');
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('sModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
