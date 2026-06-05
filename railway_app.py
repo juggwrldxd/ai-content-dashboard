@@ -83,17 +83,27 @@ def write_drive_json(service, folder_id, filename, data):
     else: service.files().create(body={"name":filename,"parents":[folder_id]},media_body=m).execute()
 
 def get_data():
-    """Load data from Drive, fall back to memory."""
+    """Load data from Volume, fall back to Drive, then defaults."""
+    data = get_data_file("dashboard_db.json", None)
+    if data is not None:
+        MEMORY.clear()
+        MEMORY.update(data)
+        return None, None, MEMORY
+    # Fall back to Drive
     try:
         svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
         d = read_drive_json(svc, fid, "data.json", {})
         MEMORY.clear(); MEMORY.update(d); MEMORY["_drive"] = True
+        save_data_file("dashboard_db.json", {k:v for k,v in MEMORY.items() if not k.startswith("_")})
         return svc, fid, MEMORY
     except:
         MEMORY.setdefault("models", DEFAULT_MODELS)
+        save_data_file("dashboard_db.json", MEMORY)
         return None, None, MEMORY
 
 def save_data(data):
+    """Save to Volume always, Drive as backup."""
+    save_data_file("dashboard_db.json", {k:v for k,v in data.items() if not k.startswith("_")})
     if data.get("_drive"):
         try:
             svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)

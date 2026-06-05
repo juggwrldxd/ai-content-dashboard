@@ -219,28 +219,80 @@ function renderDashboard() {
 }
 
 // ══════════════════ MODELS ══════════════════
+let editingModelOnCard = null;
+
 function renderModels() {
   if(selectedModel) { renderModelDetail(selectedModel); return; }
   const models = allData.models || [];
   $('modelsGrid').innerHTML = models.map(m => {
     const initials = (m.name||'?').slice(0,2).toUpperCase();
+    const isEditing = editingModelOnCard === m.name;
+    if(isEditing) {
+      return `<div class="model-card" style="cursor:default">
+        <div style="display:flex;gap:8px;flex-direction:column">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="avatar" style="width:36px;height:36px;font-size:14px;margin:0">${initials}</div>
+            <div style="flex:1">
+              <input class="f-control f-control-sm" id="mce_name" value="${m.name}" style="width:100%;font-weight:600;font-size:13px">
+            </div>
+          </div>
+          <div class="f-row">
+            <div class="f-group"><label>Age</label><input class="f-control f-control-sm" id="mce_age" value="${m.age||''}" style="width:50px"></div>
+            <div class="f-group"><label>Ethnicity</label><input class="f-control f-control-sm" id="mce_eth" value="${m.ethnicity||''}" style="width:90px"></div>
+            <div class="f-group"><label>Location</label><input class="f-control f-control-sm" id="mce_loc" value="${m.location||''}" style="width:110px"></div>
+          </div>
+          <div class="f-group"><label>Persona / kinks</label><textarea class="f-control f-control-sm" id="mce_pers" style="font-size:10px;min-height:36px">${m.persona||''}</textarea></div>
+          <div style="display:flex;gap:6px;margin-top:2px">
+            <button class="btn btn-primary btn-sm" onclick="saveModelCardEdit()">Save</button>
+            <button class="btn btn-ghost btn-sm" onclick="cancelModelCardEdit()">Cancel</button>
+            <button class="btn btn-ghost btn-sm" style="color:#f87171;border-color:rgba(239,68,68,.3);margin-left:auto" onclick="event.stopPropagation();deleteModel('${m.name}')">× Delete</button>
+          </div>
+        </div>
+      </div>`;
+    }
     return `<div class="model-card" onclick="selectModel('${m.name}')">
-          <button class="mc-del" onclick="event.stopPropagation();deleteModel('${m.name}')">×</button>
-          <div class="avatar">${initials}</div>
-          <div class="mc-name">${m.name}</div>
+      <button class="mc-del" onclick="event.stopPropagation();deleteModel('${m.name}')">×</button>
+      <div class="avatar">${initials}</div>
+      <div class="mc-name">${m.name}</div>
       <div class="mc-bio">${m.age||''} · ${m.ethnicity||''} · ${m.location||''}</div>
+      <div style="font-size:10.5px;color:#a1a1aa;margin:2px 0 6px;line-height:1.3;min-height:20px">${m.persona ? m.persona : '<span style="color:#3a3a50">No persona set</span>'}</div>
       <div class="mc-stat">
-              <span>💰 $${m.revenue||0}</span>
-              <span>👥 ${m.fans||0} fans</span>
-              <span>🖼 ${m.images||0}</span>
-            </div>
-            <div class="mc-tags">
-              ${(m.platforms||[]).map(p => `<span class="tag">${p}</span>`).join('')}
-              <span class="tag ${(m.lora_count||0) > 0 ? 'tag-green' : 'tag-yellow'}">${m.lora_count||0} LoRAs</span>
-            </div>
-          </div>`;
+        <span>💰 $${m.revenue||0}</span>
+        <span>👥 ${m.fans||0} fans</span>
+        <span>🖼 ${m.images||0}</span>
+      </div>
+      <div class="mc-tags">
+        ${(m.platforms||[]).map(p => `<span class="tag">${p}</span>`).join('')}
+        <span class="tag ${(m.lora_count||0) > 0 ? 'tag-green' : 'tag-yellow'}">${m.lora_count||0} LoRAs</span>
+      </div>
+      <button class="btn btn-xs btn-ghost" onclick="event.stopPropagation();startModelCardEdit('${m.name}')" style="margin-top:6px;width:100%;justify-content:center">✏️ Edit card</button>
+    </div>`;
   }).join('');
   $('addModelForm').style.display = 'none';
+}
+
+function startModelCardEdit(name) {
+  editingModelOnCard = name;
+  renderModels();
+}
+
+function cancelModelCardEdit() {
+  editingModelOnCard = null;
+  renderModels();
+}
+
+async function saveModelCardEdit() {
+  const name = $('mce_name')?.value;
+  if(!name) return toast('Name required','#f87171');
+  const r = await postAPI('/api/models/update', {
+    name: name,
+    age: $('mce_age')?.value || '',
+    ethnicity: $('mce_eth')?.value || '',
+    location: $('mce_loc')?.value || '',
+    persona: $('mce_pers')?.value || '',
+  });
+  if(r.ok) { toast('Saved'); editingModelOnCard = null; load(); }
+  else { toast('Save failed','#f87171'); }
 }
 
 function selectModel(name) {
@@ -901,23 +953,24 @@ function renderDataset() {
   }
 
   $('dsGrid').innerHTML = `<div class="grid-4">${dsImages.map(i => {
-    const checked = selectedDsImages.includes(i.id) ? 'checked' : '';
-    const imgUrl = `/api/dataset/file/${i.model}/${i.type}/${i.filename}`;
-    return `<div class="img-thumb" style="cursor:default;padding:0;overflow:hidden;position:relative">
-      <img src="${imgUrl}" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=padding:30px;font-size:24px;color:#a855f7;text-align:center>🖼</div>'">
-      <div style="padding:6px 8px">
-        <div style="font-size:10px;color:#6b6b80">${i.filename||'?'}</div>
-        <div style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:10px">
-          <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
-          <span style="color:#6b6b80">Select</span>
+      const checked = selectedDsImages.includes(i.id) ? 'checked' : '';
+      const imgUrl = `/api/dataset/file/${i.model}/${i.type}/${i.filename}`;
+      return `<div class="img-thumb" style="cursor:default;padding:0;overflow:hidden;position:relative">
+        <button class="mc-del" onclick="event.stopPropagation();deleteDatasetImage('${i.id}')" style="right:6px;top:6px">×</button>
+        <img src="${imgUrl}" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=padding:30px;font-size:24px;color:#a855f7;text-align:center>🖼</div>'+this.parentNode.querySelector('button').outerHTML">
+        <div style="padding:6px 8px">
+          <div style="font-size:10px;color:#6b6b80">${i.filename||'?'}</div>
+          <div style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:10px">
+            <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
+            <span style="color:#6b6b80">Select</span>
+          </div>
+          <div style="margin-top:4px">
+            <input type="text" id="cap_${i.id}" value="${(i.caption||'').replace(/"/g,'&quot;')}" placeholder="Caption..." style="width:100%;font-size:10px;background:#0a0a12;border:1px solid #1f1f2e;border-radius:4px;padding:3px 5px;color:#d4d4d8;outline:none">
+            <button class="btn btn-xs btn-ghost" onclick="saveDsCaption('${i.id}')" style="margin-top:2px;font-size:9px">Save cap</button>
+          </div>
         </div>
-        <div style="margin-top:4px">
-          <input type="text" id="cap_${i.id}" value="${(i.caption||'').replace(/"/g,'&quot;')}" placeholder="Caption..." style="width:100%;font-size:10px;background:#0a0a12;border:1px solid #1f1f2e;border-radius:4px;padding:3px 5px;color:#d4d4d8;outline:none">
-          <button class="btn btn-xs btn-ghost" onclick="saveDsCaption('${i.id}')" style="margin-top:2px;font-size:9px">Save cap</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+      </div>`;
+    }).join('')}</div>`;
 
   const hasSelection = selectedDsImages.length > 0;
   $('dsTrainBtn').style.display = hasSelection ? 'inline-flex' : 'none';
@@ -1062,6 +1115,16 @@ async function saveDsCaption(imgId) {
   const data = await r.json();
   if(data.ok) { toast('Caption saved'); load(); }
   else { toast('Save failed','#f87171'); }
+}
+
+async function deleteDatasetImage(imgId) {
+  if(!confirm('Delete this image from dataset?')) return;
+  const r = await postAPI('/api/dataset/images/delete', {id: imgId});
+  if(r.ok) { 
+    selectedDsImages = selectedDsImages.filter(id => id !== imgId);
+    toast('Image deleted'); 
+    load(); 
+  } else { toast('Delete failed','#f87171'); }
 }
 
 // ══════════════════ INLINE MODEL EDIT ══════════════════
