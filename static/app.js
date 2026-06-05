@@ -14,12 +14,12 @@ let isFirstLoad = true;
 
 // ── Single-modal system ──
 function closeAllModals() {
-  document.querySelectorAll('.modal-overlay').forEach(m => { m.style.display = 'none'; });
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
 }
 function openModal(id) {
   closeAllModals();
   const el = document.getElementById(id);
-  if(el) el.style.display = 'flex';
+  if(el) el.classList.add('open');
   else console.warn(`Modal #${id} not found`);
 }
 
@@ -42,7 +42,10 @@ function switchPage(p) {
   load();
 }
 
-function closeModal(id) { $(id).style.display = 'none'; }
+function closeModal(id) { 
+  const el = document.getElementById(id);
+  if(el) el.classList.remove('open');
+}
 
 async function fetchAPI(path, timeoutMs=12000) {
   const controller = new AbortController();

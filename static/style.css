@@ -75,7 +75,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:8px 10px;color:#6b6b80;font-weight:500;border-bottom:1px solid #14141f;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
 td{padding:8px 10px;border-bottom:1px solid #0f0f1a;color:#d4d4d8}
 tr:hover td{background:#0a0a12}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1001;display:none;align-items:center;justify-content:center}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1001;display:none;align-items:center;justify-content:center}.modal-overlay.open{display:flex}
 .modal{background:#0c0c16;border:1px solid #1f1f2e;border-radius:14px;padding:22px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;z-index:1002}
 .modal h2{font-size:17px;font-weight:600;color:#fff;margin-bottom:14px}
 .modal-close{float:right;background:none;border:none;color:#6b6b80;font-size:20px;cursor:pointer}
