@@ -530,7 +530,11 @@ def get_settings():
         "accounts": {"cron_schedule":"every 2h","platforms":["X","Telegram","Reddit","IG"],"auto_relogin":False,"notify_on_sync":True},
         "content": {"nsfw_detector":"fal","confidence_threshold":0.85,"auto_captions":True,"include_emojis":True,"include_hashtags":True},
         "storage": {"drive_folder":"ai_content_business_data","backup_enabled":False},
-        "runpod": {"enabled":False,"api_key":"","endpoint_id":"","gen_endpoint_id":"","default_checkpoint":"RealVisXL_v5.0","template":"sdxl_comfyui","default_repeat":12,"default_network_dim":48,"default_lr":0.0001,"default_steps":1500,"default_cfg":7.0,"use_adetailer":True,"use_upscale":True,"storage_volume_id":""}
+        "runpod": {"enabled":False,"api_key":"","endpoint_id":"","gen_endpoint_id":"",
+        "sfw_checkpoint":"RealVisXL_v5.0","nsfw_checkpoint":"biglust_v5","template":"sdxl_comfyui",
+        "sfw_repeat":12,"sfw_network_dim":48,"sfw_lr":0.0001,"sfw_steps":1500,
+        "nsfw_repeat":15,"nsfw_network_dim":64,"nsfw_lr":0.00008,"nsfw_steps":2000,
+        "default_cfg":7.0,"use_adetailer":True,"use_upscale":True,"storage_volume_id":""}
     })
     settings["_drive_status"] = "connected" if MEMORY.get("_drive") else "memory_only"
     return settings
@@ -810,6 +814,26 @@ def export_generation_package(data: dict):
 """)
     
     return {"ok":True, "zip_file": zip_name, "size_bytes": zip_path.stat().st_size}
+
+# ── MODEL PFP UPLOAD ──
+@app.post("/api/models/{name}/pfp")
+async def upload_model_pfp(name: str, file: UploadFile = File(...)):
+    pfp_dir = volume_path("pfps")
+    pfp_dir.mkdir(exist_ok=True)
+    ext = Path(file.filename).suffix if file.filename else ".png"
+    filename = f"{name.lower()}_pfp{ext}"
+    content = await file.read()
+    with open(pfp_dir / filename, "wb") as f:
+        f.write(content)
+    return {"ok":True, "path": f"/api/pfp/{filename}"}
+
+@app.get("/api/pfp/{filename}")
+def serve_pfp(filename: str):
+    from fastapi.responses import FileResponse
+    fpath = volume_path("pfps", filename)
+    if fpath.exists():
+        return FileResponse(str(fpath))
+    return JSONResponse({"error":"not found"}, status_code=404)
 
 # ── DOWNLOAD EXPORTED FILES ──
 @app.get("/api/exports/download/{filename}")

@@ -8,16 +8,18 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,-apple-system,system-ui,sans-serif;background:#07070d;color:#d4d4d8}
 .app{display:flex;min-height:100vh}
-.side{width:200px;background:#0a0a12;border-right:1px solid #14141f;padding:16px 0;flex-shrink:0;overflow-y:auto}
-@media(max-width:1000px){.side{width:52px;padding:10px 2px}.side .label,.side .nav-spacer{display:none}.main{padding:12px}}
-.logo{font-size:15px;font-weight:700;color:#fff;padding:0 16px;margin-bottom:16px;letter-spacing:-.3px;white-space:nowrap}
-.logo span{color:#a855f7}
-.nav-item{display:flex;align-items:center;gap:7px;padding:7px 16px;color:#6b6b80;font-size:12.5px;cursor:pointer;transition:all .1s;position:relative}
-.nav-item:hover{color:#d4d4d8;background:#0f0f1a}
-.nav-item.active{color:#a855f7;background:rgba(168,85,247,.08)}
-.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:#a855f7;border-radius:0 3px 3px 0}
-.nav-item .ico{font-size:13px;width:16px;text-align:center}
-.nav-spacer{height:1px;background:#14141f;margin:6px 16px}
+.side{width:200px;background:#08080f;border-right:1px solid #12121e;padding:0;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column}
+@media(max-width:1000px){.side{width:48px;padding:0}.side .label,.side .nav-spacer{display:none}}
+.side-logo{font-size:15px;font-weight:700;color:#fff;padding:18px 16px 14px;letter-spacing:-.3px;white-space:nowrap;border-bottom:1px solid #12121e;margin-bottom:6px}
+.side-logo span{color:#a855f7;background:linear-gradient(135deg,#a855f7,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.side-section{font-size:9.5px;font-weight:600;color:#2a2a40;text-transform:uppercase;letter-spacing:1px;padding:12px 16px 4px}
+.side-main{flex:1;overflow-y:auto;padding:0 6px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:1px 0;color:#5a5a6e;font-size:12px;cursor:pointer;transition:all .12s ease;border-radius:6px;position:relative}
+.nav-item:hover{color:#d4d4d8;background:rgba(255,255,255,.03)}
+.nav-item.active{color:#a855f7;background:linear-gradient(90deg,rgba(168,85,247,.1),transparent);box-shadow:inset 2px 0 0 #a855f7,0 0 12px rgba(168,85,247,.08)}
+.nav-item .ico{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nav-item .label{font-weight:400;white-space:nowrap}
+.nav-spacer{height:1px;background:linear-gradient(90deg,transparent,#14142a,transparent);margin:4px 10px}
 .main{flex:1;padding:20px 28px;max-width:1400px}
 @media(max-width:1000px){.main{padding:10px}}
 .page{display:none}.page.active{display:block}
@@ -116,19 +118,23 @@ tr:hover td{background:#0a0a12}
 <body>
 <div class="app">
   <div class="side">
-    <div class="logo">AI <span>Studio</span></div>
-    <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="ico">◉</span><span class="label">Dashboard</span></div>
-    <div class="nav-item" data-page="models" onclick="switchPage('models')"><span class="ico">⊞</span><span class="label">Models</span></div>
-    <div class="nav-item" data-page="pipeline" onclick="switchPage('pipeline')"><span class="ico">▶</span><span class="label">Pipeline</span></div>
-    <div class="nav-item" data-page="content" onclick="switchPage('content')"><span class="ico">▦</span><span class="label">Content</span></div>
-    <div class="nav-item" data-page="dataset" onclick="switchPage('dataset')"><span class="ico">📁</span><span class="label">Dataset</span></div>
-    <div class="nav-spacer"></div>
-    <div class="nav-item" data-page="textgen" onclick="switchPage('textgen')"><span class="ico">T</span><span class="label">Text Gen</span></div>
-    <div class="nav-item" data-page="lora" onclick="switchPage('lora')"><span class="ico">◎</span><span class="label">LoRA Mgmt</span></div>
-    <div class="nav-item" data-page="revenue" onclick="switchPage('revenue')"><span class="ico">$</span><span class="label">Revenue</span></div>
-    <div class="nav-item" data-page="accounts" onclick="switchPage('accounts')"><span class="ico">@</span><span class="label">Accounts</span></div>
-    <div class="nav-spacer"></div>
-    <div class="nav-item" data-page="settings" onclick="switchPage('settings')"><span class="ico">⚙</span><span class="label">Settings</span></div>
+    <div class="side-logo">AI <span>Studio</span></div>
+    <div class="side-main">
+      <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="ico">◉</span><span class="label">Dashboard</span></div>
+      <div class="nav-item" data-page="models" onclick="switchPage('models')"><span class="ico">⊞</span><span class="label">Models</span></div>
+      <div class="nav-spacer"></div>
+      <div class="nav-item" data-page="dataset" onclick="switchPage('dataset')"><span class="ico">📁</span><span class="label">Dataset</span></div>
+      <div class="nav-item" data-page="pipeline" onclick="switchPage('pipeline')"><span class="ico">▶</span><span class="label">Pipeline</span></div>
+      <div class="nav-item" data-page="content" onclick="switchPage('content')"><span class="ico">▦</span><span class="label">Content</span></div>
+      <div class="nav-spacer"></div>
+      <div class="nav-item" data-page="textgen" onclick="switchPage('textgen')"><span class="ico">T</span><span class="label">Text Gen</span></div>
+      <div class="nav-item" data-page="lora" onclick="switchPage('lora')"><span class="ico">◎</span><span class="label">LoRA</span></div>
+      <div class="nav-spacer"></div>
+      <div class="nav-item" data-page="revenue" onclick="switchPage('revenue')"><span class="ico">$</span><span class="label">Revenue</span></div>
+      <div class="nav-item" data-page="accounts" onclick="switchPage('accounts')"><span class="ico">@</span><span class="label">Accounts</span></div>
+      <div class="nav-spacer"></div>
+      <div class="nav-item" data-page="settings" onclick="switchPage('settings')"><span class="ico">⚙</span><span class="label">Settings</span></div>
+    </div>
   </div>
   <div class="main">
 
@@ -160,7 +166,6 @@ tr:hover td{background:#0a0a12}
       <div class="f-group"><label>Age</label><input class="f-control f-control-sm" id="nm_age" style="width:50px"></div>
       <div class="f-group"><label>Ethnicity</label><input class="f-control f-control-sm" id="nm_eth" style="width:100px"></div>
       <div class="f-group"><label>Location</label><input class="f-control f-control-sm" id="nm_loc" style="width:120px"></div>
-      <div class="f-group"><label>Style</label><select class="f-control f-control-sm" id="nm_style"><option>SFW</option><option>SFW+</option><option>NSFW</option></select></div>
       <div class="f-group"><label>Platforms</label><input class="f-control f-control-sm" id="nm_plat" value="IG,X,Reddit" style="width:140px"></div>
     </div>
     <div class="f-group" style="margin-top:8px"><label>Persona / kinks</label><input class="f-control f-control-sm" id="nm_pers" style="width:100%"></div>
@@ -205,7 +210,7 @@ tr:hover td{background:#0a0a12}
       <div class="f-group">
         <label>&nbsp;</label>
         <button class="btn btn-primary btn-sm" onclick="document.getElementById('dsFileInput').click()">Choose Files</button>
-        <input type="file" id="dsFileInput" multiple accept="image/*" style="display:none">
+        <input type="file" id="dsFileInput" multiple accept="image/*" style="display:none" onchange="uploadDatasetImages()">
       </div>
     </div>
     <div id="dsUploadStatus" style="font-size:11px;color:#6b6b80;margin-top:6px"></div>
@@ -587,6 +592,24 @@ async function deleteModel(name) {
   load();
 }
 
+async function uploadPFP(name) {
+  const input = document.getElementById('pfpInput');
+  if(!input.files || !input.files[0]) return;
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  try {
+    const r = await fetch(`/api/models/${name}/pfp`, {method:'POST', body: formData});
+    const data = await r.json();
+    if(data.ok) {
+      const img = document.getElementById('pfpImg');
+      const init = document.getElementById('pfpInitial');
+      if(img && init) { img.src = data.path; img.style.display = 'block'; init.style.display = 'none'; }
+      toast('Photo uploaded');
+    }
+  } catch(e) { toast('Upload failed','#f87171'); }
+  input.value = '';
+}
+
 function renderModelDetail(name) {
   const models = allData.models || [];
   const m = models.find(x => x.name === name) || {};
@@ -607,8 +630,10 @@ function renderModelDetail(name) {
   $('modelDetail').innerHTML = `
     <div class="card">
       <div style="display:flex;gap:14px;align-items:start;flex-wrap:wrap">
-        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:600;flex-shrink:0">
-          ${(name||'?').slice(0,2).toUpperCase()}
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:600;flex-shrink:0;cursor:pointer;overflow:hidden;position:relative" onclick="document.getElementById('pfpInput').click()" title="Click to upload photo">
+          <span id="pfpInitial">${(name||'?').slice(0,2).toUpperCase()}</span>
+          <img id="pfpImg" style="display:none;width:100%;height:100%;object-fit:cover">
+          <input type="file" id="pfpInput" accept="image/*" style="display:none" onchange="uploadPFP('${name}')">
         </div>
         <div style="flex:1;min-width:200px">
           <div style="font-size:17px;font-weight:600;color:#fff">${m.name||name}</div>
@@ -745,7 +770,7 @@ async function saveNewModel() {
   if(!name) return toast('Enter a name','#f87171');
   await postAPI('/api/models/update', {
     name, age:$('nm_age').value, ethnicity:$('nm_eth').value,
-    location:$('nm_loc').value, style:$('nm_style').value,
+    location:$('nm_loc').value,
     persona:$('nm_pers').value,
     platforms:$('nm_plat').value.split(',').map(s=>s.trim())
   });
@@ -1597,20 +1622,28 @@ function renderSettingsTab(tab) {
       <div id="rpConfigFields" style="${rp.enabled?'':'opacity:0.4;pointer-events:none'}">
         <div class="f-group" style="margin-bottom:8px"><label>API Key</label><input class="f-control f-control-sm" id="rpApiKey" value="${rp.api_key||''}" placeholder="rpr_..." style="width:100%"></div>
         <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Training Endpoint ID</label><input class="f-control f-control-sm" id="rpTrainEndpoint" value="${rp.endpoint_id||''}" placeholder="Endpoint ID" style="width:100%"></div>
-          <div class="f-group"><label>Generation Endpoint ID</label><input class="f-control f-control-sm" id="rpGenEndpoint" value="${rp.gen_endpoint_id||''}" placeholder="Endpoint ID" style="width:100%"></div>
+          <div class="f-group"><label>Training Endpoint ID</label><input class="f-control f-control-sm" id="rpTrainEndpoint" value="${rp.endpoint_id||''}" style="width:100%"></div>
+          <div class="f-group"><label>Generation Endpoint ID</label><input class="f-control f-control-sm" id="rpGenEndpoint" value="${rp.gen_endpoint_id||''}" style="width:100%"></div>
         </div>
         <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Default checkpoint</label><input class="f-control f-control-sm" id="rpCheckpoint" value="${rp.default_checkpoint||'RealVisXL_v5.0'}" style="width:160px"></div>
-          <div class="f-group"><label>Workflow template</label><input class="f-control f-control-sm" id="rpTemplate" value="${rp.template||'sdxl_comfyui'}" style="width:140px"></div>
-          <div class="f-group"><label>Storage volume ID</label><input class="f-control f-control-sm" id="rpStorageVol" value="${rp.storage_volume_id||''}" style="width:140px"></div>
+          <div class="f-group"><label>Workflow template</label><input class="f-control f-control-sm" id="rpTemplate" value="${rp.template||'sdxl_comfyui'}" style="width:160px"></div>
+          <div class="f-group"><label>Storage volume ID</label><input class="f-control f-control-sm" id="rpStorageVol" value="${rp.storage_volume_id||''}" style="width:160px"></div>
         </div>
-        <div class="card-title" style="margin-top:12px">Default training params</div>
+        <div class="card-title" style="margin-top:16px">SFW params (RealVisXL v5.0)</div>
         <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpRepeat" type="number" value="${rp.default_repeat||12}" style="width:60px"></div>
-          <div class="f-group"><label>Network dim</label><input class="f-control f-control-sm" id="rpDim" type="number" value="${rp.default_network_dim||48}" style="width:60px"></div>
-          <div class="f-group"><label>Learning rate</label><input class="f-control f-control-sm" id="rpLr" value="${rp.default_lr||0.0001}" style="width:80px"></div>
-          <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpSteps" type="number" value="${rp.default_steps||1500}" style="width:70px"></div>
+          <div class="f-group"><label>Checkpoint</label><input class="f-control f-control-sm" id="rpSfwCkpt" value="${rp.sfw_checkpoint||'RealVisXL_v5.0'}" style="width:160px"></div>
+          <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpSfwRepeat" type="number" value="${rp.sfw_repeat||12}" style="width:60px"></div>
+          <div class="f-group"><label>Net dim</label><input class="f-control f-control-sm" id="rpSfwDim" type="number" value="${rp.sfw_network_dim||48}" style="width:60px"></div>
+          <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="rpSfwLr" value="${rp.sfw_lr||0.0001}" style="width:80px"></div>
+          <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpSfwSteps" type="number" value="${rp.sfw_steps||1500}" style="width:70px"></div>
+        </div>
+        <div class="card-title" style="margin-top:12px">NSFW params (BigLust v5 + DMD2)</div>
+        <div class="f-row" style="margin-bottom:8px">
+          <div class="f-group"><label>Checkpoint</label><input class="f-control f-control-sm" id="rpNsfwCkpt" value="${rp.nsfw_checkpoint||'biglust_v5'}" style="width:160px"></div>
+          <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpNsfwRepeat" type="number" value="${rp.nsfw_repeat||15}" style="width:60px"></div>
+          <div class="f-group"><label>Net dim</label><input class="f-control f-control-sm" id="rpNsfwDim" type="number" value="${rp.nsfw_network_dim||64}" style="width:60px"></div>
+          <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="rpNsfwLr" value="${rp.nsfw_lr||0.00008}" style="width:80px"></div>
+          <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpNsfwSteps" type="number" value="${rp.nsfw_steps||2000}" style="width:70px"></div>
         </div>
         <div class="card-title" style="margin-top:12px">Default gen params</div>
         <div class="f-row" style="margin-bottom:8px">
@@ -1651,13 +1684,18 @@ async function saveRunpodConfig() {
     api_key: $('rpApiKey').value,
     endpoint_id: $('rpTrainEndpoint').value,
     gen_endpoint_id: $('rpGenEndpoint').value,
-    default_checkpoint: $('rpCheckpoint').value,
     template: $('rpTemplate').value,
     storage_volume_id: $('rpStorageVol').value,
-    default_repeat: parseInt($('rpRepeat').value) || 12,
-    default_network_dim: parseInt($('rpDim').value) || 48,
-    default_lr: parseFloat($('rpLr').value) || 0.0001,
-    default_steps: parseInt($('rpSteps').value) || 1500,
+    sfw_checkpoint: $('rpSfwCkpt').value,
+    nsfw_checkpoint: $('rpNsfwCkpt').value,
+    sfw_repeat: parseInt($('rpSfwRepeat').value) || 12,
+    sfw_network_dim: parseInt($('rpSfwDim').value) || 48,
+    sfw_lr: parseFloat($('rpSfwLr').value) || 0.0001,
+    sfw_steps: parseInt($('rpSfwSteps').value) || 1500,
+    nsfw_repeat: parseInt($('rpNsfwRepeat').value) || 15,
+    nsfw_network_dim: parseInt($('rpNsfwDim').value) || 64,
+    nsfw_lr: parseFloat($('rpNsfwLr').value) || 0.00008,
+    nsfw_steps: parseInt($('rpNsfwSteps').value) || 2000,
     default_cfg: parseFloat($('rpCfg').value) || 7.0,
     use_adetailer: $('rpADetailer').checked,
     use_upscale: $('rpUpscale').checked,
