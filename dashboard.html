@@ -89,18 +89,15 @@
 <!-- ══════════ DATASET ══════════ -->
 <div class="page" id="page-dataset">
   <div class="top"><h1>Dataset</h1><div class="f-row">
-    <select class="f-control f-control-sm" id="dsModelFilter" onchange="renderDataset()"><option value="all">All models</option></select>
-    <select class="f-control f-control-sm" id="dsTypeFilter" onchange="renderDataset()"><option value="all">All types</option><option>SFW</option><option>NSFW</option></select>
-    <select class="f-control f-control-sm" id="dsStatusFilter" onchange="renderDataset()"><option value="all">All status</option><option value="new">New</option><option value="used">Used</option><option value="rejected">Rejected</option></select>
-    <button class="btn btn-sm btn-ghost" onclick="showCreateDataset()">+ New Dataset</button>
+    <button class="btn btn-sm btn-primary" onclick="showCreateDataset()">+ New Dataset</button>
   </div></div>
-  <!-- Upload section with its OWN model picker -->
+  <!-- Upload section → requires a dataset -->
   <div class="card">
-    <div class="card-title"><span>Upload Images</span><span id="dsUploadTarget" style="font-size:11px;color:#6b6b80">No dataset selected</span></div>
+    <div class="card-title"><span>Upload Images</span><span id="dsUploadTarget" style="font-size:11px;color:#6b6b80">Upload into a dataset</span></div>
     <div class="f-row">
+      <div class="f-group"><label>Dataset</label><select class="f-control f-control-sm" id="dsUploadDataset"><option value="">— Create or select a dataset —</option></select></div>
       <div class="f-group"><label>Model</label><select class="f-control f-control-sm" id="dsUploadModel"><option value="">— Select —</option></select></div>
       <div class="f-group"><label>Type</label><select class="f-control f-control-sm" id="dsUploadType"><option>SFW</option><option>NSFW</option></select></div>
-      <div class="f-group"><label>Dataset</label><select class="f-control f-control-sm" id="dsUploadDataset"><option value="">None (direct)</option></select></div>
       <div class="f-group">
         <label>&nbsp;</label>
         <button class="btn btn-primary btn-sm" onclick="document.getElementById('dsFileInput').click()">Choose Files</button>
@@ -119,8 +116,6 @@
     <button class="btn btn-sm btn-primary" id="dsTrainBtn" style="display:none" onclick="trainFromSelected()">Train LoRA from Selected</button>
     <button class="btn btn-sm btn-ghost" id="dsAutoCapBtn" style="display:none" onclick="autoCaptionSelected()">Auto-Caption</button>
     <button class="btn btn-sm btn-ghost" id="dsExportBtn" style="display:none" onclick="exportTrainingPackage()">Export Package</button>
-    <button class="btn btn-sm btn-ghost" id="dsTagUsedBtn" style="display:none" onclick="tagSelected('used')">Mark Used</button>
-    <button class="btn btn-sm btn-ghost" id="dsTagRejectBtn" style="display:none" onclick="tagSelected('rejected')">Reject</button>
   </div>
 </div>
 

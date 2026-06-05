@@ -51,14 +51,12 @@ async function postAPI(path, data, timeoutMs=8000) {
 
 async function load() { loadPage(PAGE); }
 async function loadPage(page) {
-  const [analytics, models, accounts, revenue, captions, gallery, pipeline, hub, dashboard, loras, batches, library, settings, dataset, vault, social, datasets] = await Promise.all([
+  const [analytics, models, accounts, revenue, captions, hub, dashboard, loras, batches, library, settings, dataset, vault, social, datasets] = await Promise.all([
     fetchAPI('/api/analytics'),
     fetchAPI('/api/models'),
     fetchAPI('/api/accounts'),
     fetchAPI('/api/revenue'),
     fetchAPI('/api/captions'),
-    fetchAPI('/api/gallery'),
-    fetchAPI('/api/pipeline'),
     fetchAPI('/api/hub'),
     fetchAPI('/api/dashboard'),
     fetchAPI('/api/lora/versions'),
@@ -70,7 +68,25 @@ async function loadPage(page) {
     fetchAPI('/api/accounts/social'),
     fetchAPI('/api/dataset/list'),
   ]);
-  allData = { analytics, models, accounts, revenue, captions, gallery, pipeline, hub, dashboard, loras, batches, library, settings, dataset, vault, social, datasets };
+  // Guard: ensure arrays for .map safety (fetch can return {} on 404/timeout)
+  const asArray = (x) => Array.isArray(x) ? x : [];
+  allData = {
+    analytics: analytics || {},
+    models: asArray(models),
+    accounts: asArray(accounts),
+    revenue: revenue || {},
+    captions: asArray(captions),
+    hub: hub || {},
+    dashboard: dashboard || {},
+    loras: asArray(loras),
+    batches: asArray(batches),
+    library: asArray(library),
+    settings: settings || {},
+    dataset: asArray(dataset),
+    vault: asArray(vault),
+    social: asArray(social),
+    datasets: asArray(datasets),
+  };
   if(page==='dashboard') renderDashboard();
   else if(page==='models') renderModels();
   else if(page==='pipeline') renderPipeline();
@@ -893,77 +909,96 @@ async function saveGenerateBatch() {
 
 // ══════════════════ DATASET ══════════════════
 let selectedDsImages = [];
+let selectedDatasetId = null;
+
+// Simplified dataset page: datasets are the primary unit. No new/used/rejected status.
 
 function renderDataset() {
   const images = allData.dataset || [];
   const models = allData.models || [];
   const datasets = allData.datasets || [];
-  const mf = $('dsModelFilter'), tf = $('dsTypeFilter'), sf = $('dsStatusFilter');
-  if(mf) mf.innerHTML = '<option value="all">All models</option>' + models.map(m => `<option>${m.name}</option>`).join('');
-  // Populate upload model picker
   const upModel = $('dsUploadModel');
   if(upModel) upModel.innerHTML = '<option value="">— Select —</option>' + models.map(m => `<option>${m.name}</option>`).join('');
-  // Populate dataset selector
   const upDs = $('dsUploadDataset');
-  if(upDs) upDs.innerHTML = '<option value="">None (direct)</option>' + datasets.map(d => `<option value="${d.id}">${d.name} (${d.model} ${d.type})</option>`).join('');
-  
-  let filtered = images;
-  if(mf && mf.value !== 'all') filtered = filtered.filter(i => i.model === mf.value);
-  if(tf && tf.value !== 'all') filtered = filtered.filter(i => i.type.toUpperCase() === tf.value.toUpperCase());
-  if(sf && sf.value !== 'all') filtered = filtered.filter(i => i.status === sf.value);
+  if(upDs) upDs.innerHTML = datasets.map(d => `<option value="${d.id}">${d.name} (${d.model} ${d.type})</option>`).join('');
 
-  const total = images.length;
-  const used = images.filter(i => i.status === 'used').length;
-  const rejected = images.filter(i => i.status === 'rejected').length;
-  const newImgs = images.filter(i => i.status === 'new').length;
+  // If no datasets, show empty state
+  if(datasets.length === 0) {
+    $('dsDatasets').style.display = 'block';
+    $('dsDatasets').innerHTML = `<div class="card" style="text-align:center;padding:30px;color:#6b6b80;font-size:13px">
+      No datasets yet. Create one to start uploading images.
+    </div>`;
+    $('dsGrid').innerHTML = '';
+    $('dsActions').style.display = 'none';
+    $('dsStats').style.display = 'none';
+    if(upDs) upDs.innerHTML = '<option value="">— Create a dataset first —</option>';
+    return;
+  }
 
-  $('dsStats').style.display = total > 0 ? 'block' : 'none';
+  // Show dataset list as pills
+  $('dsDatasets').style.display = 'block';
+  $('dsDatasets').innerHTML = `<div class="card-title">Choose a dataset</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">${datasets.map(d => {
+      const dsImages = images.filter(i => i.dataset_id === d.id);
+      const active = selectedDatasetId === d.id ? 'style="border-color:#a855f7;background:#0f0f1a"' : '';
+      return `<div class="btn btn-ghost btn-sm" ${active} onclick="selectDataset('${d.id}')" style="display:inline-flex;flex-direction:column;align-items:center;padding:12px 16px;gap:4px;height:auto;border-radius:8px;line-height:1.3">
+        <strong style="color:#fff;font-size:13px">${d.name}</strong>
+        <span style="font-size:10px;color:#6b6b80">${d.model} · ${d.type} · ${dsImages.length} images</span>
+      </div>`;
+    }).join('')}</div>`;
+
+  // Show images for selected dataset
+  if(!selectedDatasetId || !datasets.find(d => d.id === selectedDatasetId)) {
+    $('dsGrid').innerHTML = '<div style="color:#6b6b80;font-size:13px;text-align:center;padding:30px">Click a dataset above to see its images</div>';
+    $('dsActions').style.display = 'none';
+    $('dsStats').style.display = 'none';
+    return;
+  }
+
+  const dsImages = images.filter(i => i.dataset_id === selectedDatasetId);
+  const currentDs = datasets.find(d => d.id === selectedDatasetId);
+
+  $('dsStats').style.display = 'block';
   $('dsStats').innerHTML = `<div style="display:flex;gap:16px;font-size:12px;flex-wrap:wrap">
-    <span>Total: <strong style="color:#fff">${total}</strong></span>
-    <span>New: <strong style="color:#fbbf24">${newImgs}</strong></span>
-    <span>Used: <strong style="color:#34d399">${used}</strong></span>
-    <span>Rejected: <strong style="color:#f87171">${rejected}</strong></span>
+    <span>Dataset: <strong style="color:#fff">${currentDs ? currentDs.name : '?'}</strong></span>
+    <span>Images: <strong style="color:#fff">${dsImages.length}</strong></span>
+    <span>Model: <span style="color:#a1a1aa">${currentDs ? currentDs.model : '?'}</span></span>
+    <span>Type: <span style="color:${(currentDs && currentDs.type === 'NSFW') ? '#f87171' : '#34d399'}">${currentDs ? currentDs.type : '?'}</span></span>
   </div>`;
 
-  // Show named datasets
-  $('dsDatasets').style.display = datasets.length > 0 ? 'block' : 'none';
-  $('dsDatasets').innerHTML = `<div class="card-title">Saved Datasets</div>
-    ${datasets.map(d => {
-      const dsImages = images.filter(i => i.dataset_id === d.id);
-      return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #0f0f1a;font-size:12px">
-        <span><strong style="color:#d4d4d8">${d.name}</strong> <span style="color:#6b6b80">— ${d.model} ${d.type}</span></span>
-        <span style="color:#a1a1aa">${dsImages.length} images</span>
-      </div>`;
-    }).join('')}`;
-
-  if(filtered.length === 0) {
-    $('dsGrid').innerHTML = '<div style="color:#6b6b80;font-size:13px;text-align:center;padding:40px">No images. Upload to get started.</div>';
+  if(dsImages.length === 0) {
+    $('dsGrid').innerHTML = '<div style="color:#6b6b80;font-size:13px;text-align:center;padding:30px">No images in this dataset. Upload some.</div>';
     $('dsActions').style.display = 'none';
     return;
   }
 
-  $('dsGrid').innerHTML = `<div class="grid-4">${filtered.map(i => {
-      const checked = selectedDsImages.includes(i.id) ? 'checked' : '';
-      const imgUrl = `/api/dataset/file/${i.model}/${i.type}/${i.filename}`;
-      return `<div class="img-thumb" style="cursor:default;padding:0;overflow:hidden;position:relative">
-        <img src="${imgUrl}" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=padding:30px;font-size:24px;color:#a855f7;text-align:center>🖼</div>'">
-        <div style="padding:6px 8px">
-          <div style="font-size:10px;color:#6b6b80">${i.filename||'?'}</div>
-          <span class="tag ${i.status==='used'?'tag-green':i.status==='rejected'?'tag-red':'tag-yellow'}">${i.status||'new'}</span>
-          <div style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:10px">
-            <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
-            <span style="color:#6b6b80">Select</span>
-          </div>
-          ${i.caption ? `<div style="font-size:9px;color:#3a3a50;margin-top:4px">${i.caption.slice(0,40)}</div>` : ''}
+  $('dsGrid').innerHTML = `<div class="grid-4">${dsImages.map(i => {
+    const checked = selectedDsImages.includes(i.id) ? 'checked' : '';
+    const imgUrl = `/api/dataset/file/${i.model}/${i.type}/${i.filename}`;
+    return `<div class="img-thumb" style="cursor:default;padding:0;overflow:hidden;position:relative">
+      <img src="${imgUrl}" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=padding:30px;font-size:24px;color:#a855f7;text-align:center>🖼</div>'">
+      <div style="padding:6px 8px">
+        <div style="font-size:10px;color:#6b6b80">${i.filename||'?'}</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:10px">
+          <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
+          <span style="color:#6b6b80">Select</span>
         </div>
-      </div>`;
-    }).join('')}</div>`;
+        ${i.caption ? `<div style="font-size:9px;color:#3a3a50;margin-top:4px">Caption: ${i.caption.slice(0,60)}</div>` : '<div style="font-size:9px;color:#f87171;font-style:italic;margin-top:4px">No caption</div>'}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 
   const hasSelection = selectedDsImages.length > 0;
   $('dsTrainBtn').style.display = hasSelection ? 'inline-flex' : 'none';
-  $('dsTagUsedBtn').style.display = hasSelection ? 'inline-flex' : 'none';
-  $('dsTagRejectBtn').style.display = hasSelection ? 'inline-flex' : 'none';
+  $('dsAutoCapBtn').style.display = hasSelection ? 'inline-flex' : 'none';
+  $('dsExportBtn').style.display = hasSelection ? 'inline-flex' : 'none';
   $('dsActions').style.display = 'block';
+}
+
+function selectDataset(id) {
+  selectedDatasetId = id;
+  selectedDsImages = [];
+  renderDataset();
 }
 
 function toggleDsImage(id) {
@@ -973,24 +1008,54 @@ function toggleDsImage(id) {
   renderDataset();
 }
 
-async function uploadDatasetImages() {
+// Upload with real progress bar (XHR)
+function uploadDatasetImages() {
   const input = $('dsFileInput');
   if(!input.files || input.files.length === 0) return toast('Select files','#f87171');
   const model = $('dsUploadModel').value;
   const type = $('dsUploadType').value;
-  if(!model) return toast('Select a model in the upload section','#f87171');
+  const dsId = $('dsUploadDataset').value;
+  if(!model) return toast('Select a model','#f87171');
+  if(!dsId) return toast('Select or create a dataset first','#f87171');
 
-  $('dsUploadStatus').textContent = 'Uploading...';
+  const bar = $('dsProgressFill');
+  const status = $('dsUploadStatus');
+  const prog = $('dsUploadProgress');
+  prog.style.display = 'block';
+  bar.style.width = '0%';
+  status.textContent = 'Starting upload...';
+
   const formData = new FormData();
   for(let f of input.files) formData.append('files', f);
   formData.append('model', model);
   formData.append('type', type.toLowerCase());
-  try {
-    const r = await fetch('/api/dataset/upload/files', {method:'POST', body: formData});
-    const data = await r.json();
-    if(data.ok) { toast(`${data.saved} images uploaded`); $('dsUploadStatus').textContent = ''; load(); }
-    else { toast(data.error||'Upload failed','#f87171'); }
-  } catch(e) { toast('Upload error','#f87171'); }
+  formData.append('dataset_id', dsId);
+
+  const xhr = new XMLHttpRequest();
+  xhr.upload.onprogress = function(e) {
+    if(e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      bar.style.width = pct + '%';
+      status.textContent = `Uploading... ${pct}% (${e.loaded}/${e.total} bytes)`;
+    }
+  };
+  xhr.onload = function() {
+    if(xhr.status === 200) {
+      const data = JSON.parse(xhr.responseText);
+      if(data.ok) {
+        bar.style.width = '100%';
+        status.textContent = `✓ ${data.saved} images uploaded`;
+        setTimeout(() => { prog.style.display = 'none'; load(); }, 1500);
+      } else {
+        status.textContent = '✗ ' + (data.error||'Upload failed');
+      }
+    } else {
+      status.textContent = '✗ Upload failed';
+    }
+  };
+  xhr.onerror = function() { status.textContent = '✗ Network error'; };
+  xhr.open('POST', '/api/dataset/upload/files', true);
+  xhr.send(formData);
   input.value = '';
 }
 
@@ -1003,8 +1068,8 @@ async function autoCaptionSelected() {
 
 async function exportTrainingPackage() {
   if(selectedDsImages.length === 0) return toast('Select images first','#f87171');
-  const model = $('dsModelFilter').value;
-  if(model === 'all') return toast('Select a specific model filter','#f87171');
+  const ds = allData.datasets.find(d => d.id === selectedDatasetId);
+  if(!ds) return toast('Select a dataset','#f87171');
   const r = await postAPI('/api/dataset/export/training', {
     ids: selectedDsImages, model, lora_name: `${model.toLowerCase()}_training`,
     base_model: 'RealVisXL_v5.0', repeat: 12, network_dim: 48, lr: 0.0001, trigger_word: ''
