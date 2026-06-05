@@ -447,9 +447,10 @@ function renderModels() {
   const models = allData.models || [];
   $('modelsGrid').innerHTML = models.map(m => {
     const initials = (m.name||'?').slice(0,2).toUpperCase();
-    return `<div class="model-card" onclick="selectModel('${m.name}')">
-      <div class="avatar">${initials}</div>
-      <div class="mc-name">${m.name}</div>
+    return `<div class="model-card" onclick="selectModel('${m.name}')" style="position:relative;cursor:pointer">
+          <button onclick="event.stopPropagation();deleteModel('${m.name}')" style="position:absolute;top:8px;right:8px;background:none;border:none;color:#6b6b80;font-size:14px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1" onmouseover="this.style.color='#f87171';this.style.background='rgba(239,68,68,.1)'" onmouseout="this.style.color='#6b6b80';this.style.background='none'">×</button>
+          <div class="avatar">${initials}</div>
+          <div class="mc-name">${m.name}</div>
       <div class="mc-bio">${m.age||''} · ${m.ethnicity||''} · ${m.location||''}</div>
       <div class="mc-stat">
         <span>💰 $${m.revenue||0}</span>
@@ -471,6 +472,14 @@ function selectModel(name) {
 }
 
 function backToModels() { selectedModel = null; renderModels(); }
+
+async function deleteModel(name) {
+  if(!confirm(`Delete model "${name}" and all its data?`)) return;
+  await postAPI('/api/models/delete', {name});
+  toast(`Deleted ${name}`);
+  selectedModel = null;
+  load();
+}
 
 function renderModelDetail(name) {
   const models = allData.models || [];
@@ -514,6 +523,7 @@ function renderModelDetail(name) {
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="showGenModal('${name}')">Generate</button>
           <button class="btn btn-ghost btn-sm" onclick="backToModels()">← Back</button>
+          <button class="btn btn-ghost btn-sm" style="color:#f87171;border-color:rgba(239,68,68,.3)" onclick="deleteModel('${name}')">× Delete</button>
         </div>
       </div>
     </div>
