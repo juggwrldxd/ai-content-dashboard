@@ -243,10 +243,12 @@ function renderModelDetail(name) {
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="showGenModal('${name}')">Generate</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEditModel()" id="editModelBtn">Edit</button>
           <button class="btn btn-ghost btn-sm" onclick="backToModels()">← Back</button>
           <button class="btn btn-ghost btn-sm" style="color:#f87171;border-color:rgba(239,68,68,.3)" onclick="deleteModel('${name}')">× Delete</button>
         </div>
       </div>
+      <div id="modelDetailContent" class="model-detail-bio"></div>
     </div>
 
     <!-- SFW LoRAs -->
@@ -1448,7 +1450,6 @@ function toggleRunpod() {
   const enabled = $('rpEnabled').checked;
   $('rpConfigFields').style.opacity = enabled ? '1' : '0.4';
   $('rpConfigFields').style.pointerEvents = enabled ? 'auto' : 'none';
-  document.querySelector('#rpEnabled').nextElementSibling.innerHTML = `RunPod Integration ${enabled?'ON':'OFF'}`;
 }
 
 async function testRunpod() {

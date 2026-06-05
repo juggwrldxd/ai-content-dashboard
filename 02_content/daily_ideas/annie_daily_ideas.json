@@ -1,66 +1,66 @@
 {
   "model": "annie",
   "persona": "College Girl / Insta Baddie \u2014 19, arts student, lives in LA, posts fit checks and skincare. Sweet but flirty energy.",
-  "date": "2026-06-04",
+  "date": "2026-06-05",
   "ideas": [
     {
-      "id": "annie_2026-06-04_1",
+      "id": "annie_2026-06-05_1",
       "model": "annie",
-      "date": "2026-06-04",
-      "image_reference": "annie/annie_20260604_01.png",
+      "date": "2026-06-05",
+      "image_reference": "annie/annie_20260605_01.png",
+      "image_description": "A beach day shot with late night thoughts energy",
+      "caption": "it's 2am and i'm thinking about\u2026 you?",
+      "hashtags": [
+        "#fitcheck",
+        "#collegegirl",
+        "#skincare",
+        "#lifestyle"
+      ],
+      "best_platform": "Telegram",
+      "best_time": "06:00 PM UTC",
+      "caption_style": "late night thoughts",
+      "vibe": "beach day",
+      "generated_at": "2026-06-05T06:03:58.020039Z"
+    },
+    {
+      "id": "annie_2026-06-05_2",
+      "model": "annie",
+      "date": "2026-06-05",
+      "image_reference": "annie/annie_20260605_02.png",
       "image_description": "A coffee shop OOTD shot with confidence boost energy",
       "caption": "learning to love every curve. you should too \ud83d\udc8b",
       "hashtags": [
-        "#collegegirl",
-        "#glowup",
-        "#hotgirlsummer",
-        "#lifestyle"
-      ],
-      "best_platform": "Reddit",
-      "best_time": "09:00 PM UTC",
-      "caption_style": "confidence boost",
-      "vibe": "coffee shop OOTD",
-      "generated_at": "2026-06-04T18:24:30.747547Z"
-    },
-    {
-      "id": "annie_2026-06-04_2",
-      "model": "annie",
-      "date": "2026-06-04",
-      "image_reference": "annie/annie_20260604_02.png",
-      "image_description": "A beach day shot with confidence boost energy",
-      "caption": "learning to love every curve. you should too \ud83d\udc8b",
-      "hashtags": [
-        "#selfie",
-        "#fitcheck",
         "#ootd",
+        "#selfie",
+        "#glowup",
         "#skincare"
       ],
-      "best_platform": "Telegram",
-      "best_time": "12:00 PM UTC",
+      "best_platform": "X",
+      "best_time": "08:00 PM UTC",
       "caption_style": "confidence boost",
-      "vibe": "beach day",
-      "generated_at": "2026-06-04T18:24:30.747582Z"
+      "vibe": "coffee shop OOTD",
+      "generated_at": "2026-06-05T06:03:58.020068Z"
     },
     {
-      "id": "annie_2026-06-04_3",
+      "id": "annie_2026-06-05_3",
       "model": "annie",
-      "date": "2026-06-04",
-      "image_reference": "annie/annie_20260604_03.png",
-      "image_description": "A college dorm shot with confidence boost energy",
-      "caption": "learning to love every curve. you should too \ud83d\udc8b",
+      "date": "2026-06-05",
+      "image_reference": "annie/annie_20260605_03.png",
+      "image_description": "A college dorm shot with playful tease energy",
+      "caption": "bet you can't guess what i'm wearing under this \ud83d\ude0f",
       "hashtags": [
-        "#skincare",
-        "#ootd",
+        "#fitcheck",
         "#selfie",
+        "#collegegirl",
         "#hotgirlsummer"
       ],
       "best_platform": "X",
-      "best_time": "06:00 PM UTC",
-      "caption_style": "confidence boost",
+      "best_time": "10:00 PM UTC",
+      "caption_style": "playful tease",
       "vibe": "college dorm",
-      "generated_at": "2026-06-04T18:24:30.747592Z"
+      "generated_at": "2026-06-05T06:03:58.020080Z"
     }
   ],
-  "generated_at": "2026-06-04T18:24:30.747602Z",
+  "generated_at": "2026-06-05T06:03:58.020095Z",
   "mode": "placeholder"
 }
