@@ -75,25 +75,37 @@ table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:8px 10px;color:#6b6b80;font-weight:500;border-bottom:1px solid #14141f;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
 td{padding:8px 10px;border-bottom:1px solid #0f0f1a;color:#d4d4d8}
 tr:hover td{background:#0a0a12}
-.modal-overlay{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  width:100vw;
-  height:100vh;
-  background:rgba(0,0,0,.6);
-  z-index:99999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  pointer-events:auto;
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0,0,0,0.8) !important;
+  z-index: 999999 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
 }
-.modal-overlay.open{
-  display:flex;
+
+.modal-overlay.open {
+  display: flex !important;
 }
-.modal{background:#0c0c16;border:1px solid #1f1f2e;border-radius:14px;padding:22px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;z-index:1002}
+.modal {
+  background: #0c0c16 !important;
+  border: 1px solid #1f1f2e !important;
+  border-radius: 14px !important;
+  padding: 22px !important;
+  max-width: 520px !important;
+  width: 90% !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  z-index: 1000000 !important;
+  position: relative !important;
+}
 .modal h2{font-size:17px;font-weight:600;color:#fff;margin-bottom:14px}
 .modal-close{float:right;background:none;border:none;color:#6b6b80;font-size:20px;cursor:pointer}
 .modal-close:hover{color:#fff}
