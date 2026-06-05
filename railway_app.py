@@ -3,6 +3,7 @@
 import json, os, datetime, io, random, hashlib
 from pathlib import Path
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -137,6 +138,11 @@ def save_data_file(name, data):
     except: pass
 
 app = FastAPI()
+# Serve static files (CSS, JS)
+HERE = Path(__file__).parent
+static_dir = HERE / "static"
+static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # ══════════════════ EXISTING ENDPOINTS (preserved) ══════════════════
 
@@ -615,6 +621,27 @@ def batch_add_images(data: dict):
         added.append(new["id"])
     save_data_file("dataset_images.json", images)
     return {"ok":True, "count": len(added), "ids": added}
+
+# ── NAMED DATASETS ──
+@app.get("/api/dataset/list")
+def list_datasets():
+    return get_data_file("datasets.json", [])
+
+@app.post("/api/dataset/create")
+def create_dataset(data: dict):
+    datasets = get_data_file("datasets.json", [])
+    new = {
+        "id": f"ds_{int(datetime.datetime.utcnow().timestamp())}",
+        "name": data.get("name",""),
+        "model": data.get("model",""),
+        "type": data.get("type","sfw"),
+        "notes": data.get("notes",""),
+        "created_at": datetime.datetime.utcnow().isoformat(),
+        "image_count": 0
+    }
+    datasets.append(new)
+    save_data_file("datasets.json", datasets)
+    return {"ok":True, "id": new["id"]}
 
 # ── FILE UPLOAD (stores images on Railway Volume) ──
 from fastapi import UploadFile, File, Form

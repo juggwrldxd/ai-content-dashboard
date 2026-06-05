@@ -1,340 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Content Studio v2</title>
-<link rel="stylesheet" href="/static/style.css">
 
-</head>
-<body>
-<div class="app">
-  <div class="side">
-    <div class="side-logo">AI <span>Studio</span></div>
-    <div class="side-main">
-      <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="ico">◉</span><span class="label">Dashboard</span></div>
-      <div class="nav-item" data-page="models" onclick="switchPage('models')"><span class="ico">⊞</span><span class="label">Models</span></div>
-      <div class="nav-spacer"></div>
-      <div class="nav-item" data-page="dataset" onclick="switchPage('dataset')"><span class="ico">📁</span><span class="label">Dataset</span></div>
-      <div class="nav-item" data-page="pipeline" onclick="switchPage('pipeline')"><span class="ico">▶</span><span class="label">Pipeline</span></div>
-      <div class="nav-item" data-page="content" onclick="switchPage('content')"><span class="ico">▦</span><span class="label">Content</span></div>
-      <div class="nav-spacer"></div>
-      <div class="nav-item" data-page="textgen" onclick="switchPage('textgen')"><span class="ico">T</span><span class="label">Text Gen</span></div>
-      <div class="nav-item" data-page="lora" onclick="switchPage('lora')"><span class="ico">◎</span><span class="label">LoRA</span></div>
-      <div class="nav-spacer"></div>
-      <div class="nav-item" data-page="revenue" onclick="switchPage('revenue')"><span class="ico">$</span><span class="label">Revenue</span></div>
-      <div class="nav-item" data-page="accounts" onclick="switchPage('accounts')"><span class="ico">@</span><span class="label">Accounts</span></div>
-      <div class="nav-spacer"></div>
-      <div class="nav-item" data-page="settings" onclick="switchPage('settings')"><span class="ico">⚙</span><span class="label">Settings</span></div>
-    </div>
-  </div>
-  <div class="main">
-
-<!-- ══════════ DASHBOARD ══════════ -->
-<div class="page active" id="page-dashboard">
-  <div class="top"><h1>Dashboard</h1><div class="f-row">
-    <button class="btn btn-ghost btn-sm" onclick="switchPage('models')">+ Model</button>
-    <button class="btn btn-ghost btn-sm" onclick="switchPage('pipeline')">+ Generate</button>
-    <button class="btn btn-ghost btn-sm" onclick="switchPage('content')">+ Upload</button>
-    <button class="btn btn-primary btn-sm" onclick="switchPage('revenue')">+ Revenue</button>
-    <button class="btn btn-ghost btn-sm" onclick="load()">↻</button>
-  </div></div>
-  <div class="row row-4" id="dashStats"></div>
-  <div class="row row-2-1">
-    <div class="card"><div class="card-title"><span>Pending validation</span><span id="dashPendingBadge" class="pill pill-yellow">0</span></div><div id="dashPendingAlert"></div><div class="card-title" style="margin-top:14px"><span>Revenue by model</span></div><div id="dashRevByModel"></div></div>
-    <div class="card"><div class="card-title"><span>Account sync</span><span id="dashSyncStatus" class="pill pill-gray">idle</span></div><div id="dashSyncInfo"></div><div class="card-title" style="margin-top:14px"><span>Quick actions</span></div><div id="dashActions"></div></div>
-  </div>
-  <div class="card"><div class="card-title"><span>Priority actions</span><span class="pill pill-purple">Prioritized</span></div><div id="dashPriorities"></div></div>
-</div>
-
-<!-- ══════════ MODELS ══════════ -->
-<div class="page" id="page-models">
-  <div class="top"><h1>Models</h1><div class="f-row"><button class="btn btn-primary btn-sm" onclick="showAddModel()">+ Add Model</button></div></div>
-  <div class="model-grid" id="modelsGrid"></div>
-  <div class="card" id="addModelForm" style="display:none">
-    <div class="card-title">New model</div>
-    <div class="f-row">
-      <div class="f-group"><label>Name</label><input class="f-control f-control-sm" id="nm_name" placeholder="e.g. Maya"></div>
-      <div class="f-group"><label>Age</label><input class="f-control f-control-sm" id="nm_age" style="width:50px"></div>
-      <div class="f-group"><label>Ethnicity</label><input class="f-control f-control-sm" id="nm_eth" style="width:100px"></div>
-      <div class="f-group"><label>Location</label><input class="f-control f-control-sm" id="nm_loc" style="width:120px"></div>
-      <div class="f-group"><label>Platforms</label><input class="f-control f-control-sm" id="nm_plat" value="IG,X,Reddit" style="width:140px"></div>
-    </div>
-    <div class="f-group" style="margin-top:8px"><label>Persona / kinks</label><input class="f-control f-control-sm" id="nm_pers" style="width:100%"></div>
-    <div style="margin-top:8px;display:flex;gap:6px">
-      <button class="btn btn-primary btn-sm" onclick="saveNewModel()">Save</button>
-      <button class="btn btn-ghost btn-sm" onclick="hideAddModel()">Cancel</button>
-    </div>
-  </div>
-  <!-- Model detail panel (shown when clicking a model) -->
-  <div id="modelDetail" style="display:none"></div>
-</div>
-
-<!-- ══════════ PIPELINE ══════════ -->
-<div class="page" id="page-pipeline">
-  <div class="top"><h1>Pipeline</h1><div class="f-row"><select class="f-control f-control-sm" id="pipeModelFilter" onchange="renderPipeline()"><option value="all">All models</option></select></div></div>
-  <div id="batchList"></div>
-</div>
-
-<!-- ══════════ CONTENT LIBRARY ══════════ -->
-<div class="page" id="page-content">
-  <div class="top"><h1>Content Library</h1><div class="f-row">
-    <select class="f-control f-control-sm" id="clModelFilter" onchange="renderContentLib()"><option value="all">All models</option></select>
-    <select class="f-control f-control-sm" id="clStatusFilter" onchange="renderContentLib()"><option value="all">All status</option><option value="draft">Draft</option><option value="approved">Approved</option><option value="posted">Posted</option></select>
-    <select class="f-control f-control-sm" id="clNsfwFilter" onchange="renderContentLib()"><option value="all">All NSFW</option><option value="sfw">SFW</option><option value="explicit">NSFW</option><option value="mild">Mild</option></select>
-  </div></div>
-  <div id="contentGrid"></div>
-</div>
-
-<!-- ══════════ DATASET ══════════ -->
-<div class="page" id="page-dataset">
-  <div class="top"><h1>Dataset</h1><div class="f-row">
-    <select class="f-control f-control-sm" id="dsModelFilter" onchange="renderDataset()"><option value="all">All models</option></select>
-    <select class="f-control f-control-sm" id="dsTypeFilter" onchange="renderDataset()"><option value="all">All types</option><option>SFW</option><option>NSFW</option></select>
-    <select class="f-control f-control-sm" id="dsStatusFilter" onchange="renderDataset()"><option value="all">All status</option><option value="new">New</option><option value="used">Used</option><option value="rejected">Rejected</option></select>
-    <button class="btn btn-sm btn-ghost" onclick="showCreateDataset()">+ New Dataset</button>
-  </div></div>
-  <!-- Upload section with its OWN model picker -->
-  <div class="card">
-    <div class="card-title"><span>Upload Images</span><span id="dsUploadTarget" style="font-size:11px;color:#6b6b80">No dataset selected</span></div>
-    <div class="f-row">
-      <div class="f-group"><label>Model</label><select class="f-control f-control-sm" id="dsUploadModel"><option value="">— Select —</option></select></div>
-      <div class="f-group"><label>Type</label><select class="f-control f-control-sm" id="dsUploadType"><option>SFW</option><option>NSFW</option></select></div>
-      <div class="f-group"><label>Dataset</label><select class="f-control f-control-sm" id="dsUploadDataset"><option value="">None (direct)</option></select></div>
-      <div class="f-group">
-        <label>&nbsp;</label>
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('dsFileInput').click()">Choose Files</button>
-        <input type="file" id="dsFileInput" multiple accept="image/*" style="display:none" onchange="uploadDatasetImages()">
-      </div>
-    </div>
-    <div id="dsUploadProgress" style="margin-top:6px;display:none">
-      <div class="bar"><div class="bar-fill" id="dsProgressFill" style="width:0%"></div></div>
-      <div id="dsUploadStatus" style="font-size:11px;color:#6b6b80"></div>
-    </div>
-  </div>
-  <div id="dsDatasets" class="card" style="display:none"></div>
-  <div id="dsStats" class="card" style="display:none"></div>
-  <div id="dsGrid"></div>
-  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap" id="dsActions">
-    <button class="btn btn-sm btn-primary" id="dsTrainBtn" style="display:none" onclick="trainFromSelected()">Train LoRA from Selected</button>
-    <button class="btn btn-sm btn-ghost" id="dsAutoCapBtn" style="display:none" onclick="autoCaptionSelected()">Auto-Caption</button>
-    <button class="btn btn-sm btn-ghost" id="dsExportBtn" style="display:none" onclick="exportTrainingPackage()">Export Package</button>
-    <button class="btn btn-sm btn-ghost" id="dsTagUsedBtn" style="display:none" onclick="tagSelected('used')">Mark Used</button>
-    <button class="btn btn-sm btn-ghost" id="dsTagRejectBtn" style="display:none" onclick="tagSelected('rejected')">Reject</button>
-  </div>
-</div>
-
-<!-- ══════════ TEXT GEN ══════════ -->
-<div class="page" id="page-textgen">
-  <div class="top"><h1>Text Generation</h1></div>
-  <div class="row row-1-2">
-    <div class="card">
-      <div class="card-title">Generate</div>
-      <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="tgModel"></select></div>
-      <div class="f-group" style="margin-bottom:8px"><label>Content type</label><div id="tgTypes" style="display:flex;flex-wrap:wrap;gap:6px">
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked value="caption"> Caption</label>
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" value="tweet"> Tweet</label>
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" value="reddit"> Reddit</label>
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" value="dm"> DM</label>
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" value="bio"> Bio</label>
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" value="promo"> Promo</label>
-      </div></div>
-      <div class="f-row" style="margin-bottom:8px">
-        <div class="f-group"><label>NSFW level</label><select class="f-control f-control-sm" id="tgNsfw"><option>SFW</option><option>Mild</option><option>Explicit</option></select></div>
-        <div class="f-group"><label>Variations</label><select class="f-control f-control-sm" id="tgVars"><option>3</option><option>5</option></select></div>
-      </div>
-      <div class="f-group" style="margin-bottom:10px"><label>Context / vibe</label><input class="f-control f-control-sm" id="tgContext" placeholder="e.g. teasing tone, red dress photoset"></div>
-      <button class="btn btn-primary btn-sm" onclick="generateText()">Generate</button>
-    </div>
-    <div class="card"><div class="card-title">Results</div><div id="tgResults"><div style="color:#6b6b80;font-size:12px;padding:20px;text-align:center">Generate text to see results here</div></div></div>
-  </div>
-</div>
-
-<!-- ══════════ LORA MANAGEMENT ══════════ -->
-<div class="page" id="page-lora">
-  <div class="top"><h1>LoRA Management</h1><div class="f-row"><select class="f-control f-control-sm" id="loraModelFilter" onchange="renderLora()"><option value="all">All models</option></select><button class="btn btn-primary btn-sm" onclick="showTrainLora()">+ Train New</button></div></div>
-  <div id="loraSummary" class="card" style="display:none"></div>
-  <div id="loraTableWrap"><div style="color:#6b6b80;font-size:12px;padding:20px;text-align:center">No LoRAs trained yet</div></div>
-</div>
-
-<!-- ══════════ REVENUE ══════════ -->
-<div class="page" id="page-revenue">
-  <div class="top"><h1>Revenue</h1><div class="f-row">
-    <select class="f-control f-control-sm" id="revModelFilter" onchange="renderRevenue()"><option value="all">All models</option></select>
-    <button class="btn btn-primary btn-sm" onclick="showAddRevenue()">+ Add Revenue</button>
-  </div></div>
-  <div class="row row-3" id="revStats"></div>
-  <div class="row row-2">
-    <div class="card"><div class="card-title">By model</div><div id="revByModel"></div></div>
-    <div class="card"><div class="card-title">Payment history</div><div id="revHistory"></div></div>
-  </div>
-</div>
-
-<!-- ══════════ ACCOUNTS ══════════ -->
-<div class="page" id="page-accounts">
-  <div class="top"><h1>Accounts</h1><div class="f-row">
-    <select class="f-control f-control-sm" id="acctModelFilter" onchange="renderAccounts()"><option value="all">All models</option></select>
-    <div style="display:flex;gap:6px;margin-left:8px">
-      <button class="btn btn-sm btn-ghost" onclick="showVaultModal()">+ Vault Entry</button>
-      <button class="btn btn-sm btn-ghost" onclick="showSocialModal()">+ Social Add</button>
-    </div>
-  </div></div>
-  <div class="card" id="socialMonitorSection">
-    <div class="card-title"><span>Social Monitor</span><span class="pill pill-gray">Manual update</span></div>
-    <div id="socialList"></div>
-  </div>
-  <div class="card" id="vaultSection">
-    <div class="card-title"><span>Vault</span><span class="pill pill-red">Credentials</span></div>
-    <div id="vaultList"></div>
-  </div>
-</div>
-
-<!-- ══════════ SETTINGS ══════════ -->
-<div class="page" id="page-settings">
-  <div class="top"><h1>Settings</h1></div>
-  <div class="tab-bar" id="settingsTabs">
-    <button class="tab active" data-tab="general" onclick="switchSettingsTab('general')">General</button>
-    <button class="tab" data-tab="training" onclick="switchSettingsTab('training')">Training</button>
-    <button class="tab" data-tab="accounts" onclick="switchSettingsTab('accounts')">Accounts</button>
-    <button class="tab" data-tab="keys" onclick="switchSettingsTab('keys')">API Keys</button>
-    <button class="tab" data-tab="runpod" onclick="switchSettingsTab('runpod')">RunPod</button>
-    <button class="tab" data-tab="data" onclick="switchSettingsTab('data')">Data</button>
-  </div>
-  <div id="settingsContent"></div>
-</div>
-
-  </div>
-</div>
-<div id="toast" class="toast"></div>
-
-<!-- Train LoRA Modal -->
-<div class="modal-overlay" id="trainLoraModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('trainLoraModal')">×</button>
-    <h2>Train New LoRA</h2>
-    <div class="f-group" style="margin-bottom:8px"><label>Custom name</label><input class="f-control f-control-sm" id="tlCustomName" placeholder="e.g. annie_red_dress_v2" style="width:100%"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="tlModel"></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Type</label><select class="f-control f-control-sm" id="tlType"><option>SFW</option><option>NSFW</option></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Dataset images</label>
-      <div id="tlImagesInfo" style="font-size:11px;color:#6b6b80;margin-bottom:4px">0 selected</div>
-      <select class="f-control f-control-sm" id="tlDatasetSelect" onchange="loadDatasetForTraining()">
-        <option value="">— Select saved dataset —</option>
-      </select>
-    <div class="f-group" style="margin-bottom:8px"><label>Source / Method</label>
-      <select class="f-control f-control-sm" id="tlSource">
-        <option value="uploaded">Upload .safetensors later</option>
-        <option value="runpod">RunPod API (auto-train)</option>
-        <option value="export">Export ComfyUI workflow</option>
-      </select></div>
-    <div class="f-row" style="margin-bottom:8px">
-      <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="tlSteps" type="number" value="1500" style="width:60px"></div>
-      <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="tlLr" value="0.0001" style="width:70px"></div>
-      <div class="f-group"><label>Loss</label><input class="f-control f-control-sm" id="tlLoss" value="0.08" step="0.001" style="width:60px"></div>
-    </div>
-    <div class="f-group" style="margin-bottom:10px"><label>Trigger word</label><input class="f-control f-control-sm" id="tlTrigger" placeholder="e.g. ann1e_style" style="width:200px"></div>
-    <div style="margin-bottom:10px;font-size:11px;color:#a1a1aa" id="tlCostEst">Cost: ~$1-3 via RunPod · Free for manual export</div>
-    <div style="display:flex;gap:6px">
-      <button class="btn btn-primary btn-sm" onclick="saveTrainLora()">Start Training</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('trainLoraModal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add Revenue Modal -->
-<div class="modal-overlay" id="addRevModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('addRevModal')">×</button>
-    <h2>Add Revenue</h2>
-    <div class="f-group" style="margin-bottom:8px"><label>Amount ($)</label><input class="f-control f-control-sm" id="arAmount" type="number" value="15" style="width:100px"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="arModel"></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Platform</label><select class="f-control f-control-sm" id="arPlat"><option>OF</option><option>Fansly</option><option>Telegram</option><option>X</option><option>Reddit</option><option>Custom</option></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Type</label><select class="f-control f-control-sm" id="arType"><option>Sub</option><option>Tip</option><option>Custom</option><option>PPV</option></select></div>
-    <div class="f-group" style="margin-bottom:10px"><label>Notes</label><input class="f-control f-control-sm" id="arNotes" placeholder="Optional notes"></div>
-    <button class="btn btn-primary btn-sm" onclick="saveRevenue()">Add</button>
-  </div>
-</div>
-
-<!-- Generate Batch Modal -->
-<div class="modal-overlay" id="genModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('genModal')">×</button>
-    <h2>Generate Content</h2>
-    <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="gmModel"></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>LoRA</label><select class="f-control f-control-sm" id="gmLora"><option value="">Select LoRA first</option></select></div>
-    <div class="f-row" style="margin-bottom:8px">
-      <div class="f-group"><label>NSFW level</label><select class="f-control f-control-sm" id="gmNsfw"><option>SFW</option><option>Mild</option><option>Explicit</option></select></div>
-      <div class="f-group"><label>Count</label><select class="f-control f-control-sm" id="gmCount"><option>4</option><option>8</option><option>12</option><option>20</option><option>30</option><option>50</option></select></div>
-    </div>
-    <div class="f-group" style="margin-bottom:8px"><label>Source / Method</label>
-      <select class="f-control f-control-sm" id="gmSource">
-        <option value="batch">Create batch (manage)</option>
-        <option value="runpod">RunPod API (auto-gen)</option>
-        <option value="export">Export ComfyUI workflow</option>
-      </select>
-    </div>
-    <div class="f-row" style="margin-bottom:8px" id="gmExtraOptions">
-      <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked id="gmADetailer"> ADetailer (face fix)</label>
-      <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked id="gmUpscale"> Upscale to 2048</label>
-      <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked id="gmVaried"> Varied prompts</label>
-    </div>
-    <div class="f-group" style="margin-bottom:8px"><label>Prompt</label><textarea class="f-control" id="gmPrompt" style="min-height:50px" placeholder="Describe the image..."></textarea></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Negative prompt</label><textarea class="f-control" id="gmNegPrompt" style="min-height:30px" placeholder="bad quality, blurry..."></textarea></div>
-    <div class="f-row" style="margin-bottom:10px">
-      <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="gmSteps" value="30" style="width:50px"></div>
-      <div class="f-group"><label>CFG</label><input class="f-control f-control-sm" id="gmCfg" value="7.0" style="width:50px"></div>
-      <div class="f-group"><label>Seed</label><input class="f-control f-control-sm" id="gmSeed" value="-1" style="width:60px"></div>
-    </div>
-    <div style="font-size:10px;color:#3a3a50;margin-bottom:8px">Estimated cost: $0.002/image</div>
-    <button class="btn btn-primary btn-sm" onclick="saveGenerateBatch()">Generate</button>
-  </div>
-</div>
-
-<!-- Add Vault Entry Modal -->
-<div class="modal-overlay" id="vaultModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('vaultModal')">×</button>
-    <h2>Add Vault Entry</h2>
-    <div class="f-group" style="margin-bottom:8px"><label>Email / Username</label><input class="f-control f-control-sm" id="vEmail" style="width:100%"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Password</label><input class="f-control f-control-sm" id="vPassword" type="password" style="width:100%"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="vModel"></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Used at</label><input class="f-control f-control-sm" id="vUsed" placeholder="e.g. IG main, X alt, Reddit #1" style="width:100%"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Status</label><select class="f-control f-control-sm" id="vStatus"><option>Active</option><option>Banned</option><option>Dormant</option></select></div>
-    <div class="f-group" style="margin-bottom:10px"><label>Notes</label><input class="f-control f-control-sm" id="vNotes" placeholder="Optional" style="width:100%"></div>
-    <button class="btn btn-primary btn-sm" onclick="saveVaultEntry()">Save</button>
-  </div>
-</div>
-
-<!-- Add Social Entry Modal -->
-<div class="modal-overlay" id="socialModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('socialModal')">×</button>
-    <h2>Add Monitored Account</h2>
-    <div class="f-group" style="margin-bottom:8px"><label>Handle</label><input class="f-control f-control-sm" id="sHandle" placeholder="@username" style="width:100%"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Platform</label><select class="f-control f-control-sm" id="sPlatform"><option>IG</option><option>X</option><option>Reddit</option><option>Telegram</option><option>OnlyFans</option><option>Fansly</option></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="sModel"></select></div>
-    <div class="f-row" style="margin-bottom:10px">
-      <div class="f-group"><label>Followers</label><input class="f-control f-control-sm" id="sFollowers" type="number" value="0" style="width:80px"></div>
-      <div class="f-group"><label>Posts</label><input class="f-control f-control-sm" id="sPosts" type="number" value="0" style="width:60px"></div>
-      <div class="f-group"><label>Engagement %</label><input class="f-control f-control-sm" id="sEng" type="number" step="0.1" value="0" style="width:60px"></div>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="saveSocialEntry()">Save</button>
-  </div>
-</div>
-
-<!-- Create Dataset Modal -->
-<div class="modal-overlay" id="createDatasetModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('createDatasetModal')">×</button>
-    <h2>Create Dataset</h2>
-    <div class="f-group" style="margin-bottom:8px"><label>Dataset name</label><input class="f-control f-control-sm" id="cdName" placeholder="e.g. Annie SFW v2 training set" style="width:100%"></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="cdModel"></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Type</label><select class="f-control f-control-sm" id="cdType"><option>SFW</option><option>NSFW</option></select></div>
-    <div class="f-group" style="margin-bottom:10px"><label>Notes</label><input class="f-control f-control-sm" id="cdNotes" placeholder="Optional" style="width:100%"></div>
-    <button class="btn btn-primary btn-sm" onclick="saveCreateDataset()">Create</button>
-  </div>
-</div>
-
-<script src="/static/app.js"></script>
 let PAGE = 'dashboard';
 let allData = {};
 let selectedModel = null;  // For model detail view
@@ -372,16 +36,22 @@ async function fetchAPI(path, timeoutMs=5000) {
     return {};
   }
 }
-async function postAPI(path, data) {
+async function postAPI(path, data, timeoutMs=8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const r = await fetch(path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const r = await fetch(path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data), signal: controller.signal});
+    clearTimeout(timer);
     return await r.json();
-  } catch(e) { return {}; }
+  } catch(e) {
+    clearTimeout(timer);
+    return {};
+  }
 }
 
 async function load() { loadPage(PAGE); }
 async function loadPage(page) {
-  const [analytics, models, accounts, revenue, captions, gallery, pipeline, hub, dashboard, loras, batches, library, settings, dataset, vault, social] = await Promise.all([
+  const [analytics, models, accounts, revenue, captions, gallery, pipeline, hub, dashboard, loras, batches, library, settings, dataset, vault, social, datasets] = await Promise.all([
     fetchAPI('/api/analytics'),
     fetchAPI('/api/models'),
     fetchAPI('/api/accounts'),
@@ -398,8 +68,9 @@ async function loadPage(page) {
     fetchAPI('/api/dataset/images'),
     fetchAPI('/api/accounts/vault'),
     fetchAPI('/api/accounts/social'),
+    fetchAPI('/api/dataset/list'),
   ]);
-  allData = { analytics, models, accounts, revenue, captions, gallery, pipeline, hub, dashboard, loras, batches, library, settings, dataset, vault, social };
+  allData = { analytics, models, accounts, revenue, captions, gallery, pipeline, hub, dashboard, loras, batches, library, settings, dataset, vault, social, datasets };
   if(page==='dashboard') renderDashboard();
   else if(page==='models') renderModels();
   else if(page==='pipeline') renderPipeline();
@@ -546,7 +217,10 @@ function renderModelDetail(name) {
   updateGmLoras(name);
 
   $('modelDetail').style.display = 'block';
-  <div id="modelDetail" style="display:none"></div>
+  $('modelDetail').innerHTML = `
+    <div class="card">
+      <div style="display:flex;gap:14px;align-items:start;flex-wrap:wrap">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:600;flex-shrink:0;cursor:pointer;overflow:hidden;position:relative" onclick="document.getElementById('pfpInput').click()" title="Click to upload photo">
           <span id="pfpInitial">${(name||'?').slice(0,2).toUpperCase()}</span>
           <img id="pfpImg" style="display:none;width:100%;height:100%;object-fit:cover">
           <input type="file" id="pfpInput" accept="image/*" style="display:none" onchange="uploadPFP('${name}')">
@@ -1221,11 +895,16 @@ let selectedDsImages = [];
 function renderDataset() {
   const images = allData.dataset || [];
   const models = allData.models || [];
+  const datasets = allData.datasets || [];
   const mf = $('dsModelFilter'), tf = $('dsTypeFilter'), sf = $('dsStatusFilter');
   if(mf) mf.innerHTML = '<option value="all">All models</option>' + models.map(m => `<option>${m.name}</option>`).join('');
-  // Populate upload model picker too (separate from filter)
+  // Populate upload model picker
   const upModel = $('dsUploadModel');
   if(upModel) upModel.innerHTML = '<option value="">— Select —</option>' + models.map(m => `<option>${m.name}</option>`).join('');
+  // Populate dataset selector
+  const upDs = $('dsUploadDataset');
+  if(upDs) upDs.innerHTML = '<option value="">None (direct)</option>' + datasets.map(d => `<option value="${d.id}">${d.name} (${d.model} ${d.type})</option>`).join('');
+  
   let filtered = images;
   if(mf && mf.value !== 'all') filtered = filtered.filter(i => i.model === mf.value);
   if(tf && tf.value !== 'all') filtered = filtered.filter(i => i.type.toUpperCase() === tf.value.toUpperCase());
@@ -1244,6 +923,17 @@ function renderDataset() {
     <span>Rejected: <strong style="color:#f87171">${rejected}</strong></span>
   </div>`;
 
+  // Show named datasets
+  $('dsDatasets').style.display = datasets.length > 0 ? 'block' : 'none';
+  $('dsDatasets').innerHTML = `<div class="card-title">Saved Datasets</div>
+    ${datasets.map(d => {
+      const dsImages = images.filter(i => i.dataset_id === d.id);
+      return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #0f0f1a;font-size:12px">
+        <span><strong style="color:#d4d4d8">${d.name}</strong> <span style="color:#6b6b80">— ${d.model} ${d.type}</span></span>
+        <span style="color:#a1a1aa">${dsImages.length} images</span>
+      </div>`;
+    }).join('')}`;
+
   if(filtered.length === 0) {
     $('dsGrid').innerHTML = '<div style="color:#6b6b80;font-size:13px;text-align:center;padding:40px">No images. Upload to get started.</div>';
     $('dsActions').style.display = 'none';
@@ -1251,18 +941,21 @@ function renderDataset() {
   }
 
   $('dsGrid').innerHTML = `<div class="grid-4">${filtered.map(i => {
-    const checked = selectedDsImages.includes(i.id) ? 'checked' : '';
-    return `<div class="img-thumb" style="cursor:default;padding:20px 10px">
-      <div style="font-size:24px;font-weight:300;color:#a855f7">🖼</div>
-      <div style="font-size:10px;color:#6b6b80">${i.filename||'?'}</div>
-      <span class="tag ${i.status==='used'?'tag-green':i.status==='rejected'?'tag-red':'tag-yellow'}">${i.status||'new'}</span>
-      <div style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:10px">
-        <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
-        <span style="color:#6b6b80">Select</span>
-      </div>
-      ${i.caption ? `<div style="font-size:9px;color:#3a3a50;margin-top:4px">${i.caption.slice(0,40)}</div>` : ''}
-    </div>`;
-  }).join('')}</div>`;
+      const checked = selectedDsImages.includes(i.id) ? 'checked' : '';
+      const imgUrl = `/api/dataset/file/${i.model}/${i.type}/${i.filename}`;
+      return `<div class="img-thumb" style="cursor:default;padding:0;overflow:hidden;position:relative">
+        <img src="${imgUrl}" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=padding:30px;font-size:24px;color:#a855f7;text-align:center>🖼</div>'">
+        <div style="padding:6px 8px">
+          <div style="font-size:10px;color:#6b6b80">${i.filename||'?'}</div>
+          <span class="tag ${i.status==='used'?'tag-green':i.status==='rejected'?'tag-red':'tag-yellow'}">${i.status||'new'}</span>
+          <div style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:10px">
+            <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
+            <span style="color:#6b6b80">Select</span>
+          </div>
+          ${i.caption ? `<div style="font-size:9px;color:#3a3a50;margin-top:4px">${i.caption.slice(0,40)}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('')}</div>`;
 
   const hasSelection = selectedDsImages.length > 0;
   $('dsTrainBtn').style.display = hasSelection ? 'inline-flex' : 'none';
@@ -1337,6 +1030,114 @@ async function trainFromSelected() {
   if(model === 'all') return toast('Select a specific model','#f87171');
   showTrainLora(model, $('dsTypeFilter').value === 'all' ? 'SFW' : $('dsTypeFilter').value);
   $('tlImagesInfo').textContent = `${selectedDsImages.length} images selected from Dataset`;
+}
+
+// ══════════════════ NAMED DATASETS ══════════════════
+function showCreateDataset() {
+  const models = allData.models || [];
+  $('cdModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
+  $('createDatasetModal').style.display = 'flex';
+}
+
+async function saveCreateDataset() {
+  const name = $('cdName').value.trim();
+  if(!name) return toast('Enter a dataset name','#f87171');
+  const r = await postAPI('/api/dataset/create', {
+    name, model: $('cdModel').value, type: $('cdType').value, notes: $('cdNotes').value
+  });
+  closeModal('createDatasetModal');
+  if(r.ok) { toast(`Dataset "${name}" created`); load(); }
+  else { toast('Failed to create','#f87171'); }
+}
+
+// ══════════════════ UPDATED UPLOAD WITH PROGRESS ══════════════════
+async function uploadDatasetImages() {
+  const input = $('dsFileInput');
+  if(!input.files || input.files.length === 0) return toast('Select files','#f87171');
+  const model = $('dsUploadModel').value;
+  const type = $('dsUploadType').value;
+  if(!model) return toast('Select a model','#f87171');
+
+  const bar = $('dsProgressFill');
+  const status = $('dsUploadStatus');
+  const prog = $('dsUploadProgress');
+  prog.style.display = 'block';
+  bar.style.width = '0%';
+  status.textContent = 'Starting upload...';
+
+  const formData = new FormData();
+  for(let f of input.files) formData.append('files', f);
+  formData.append('model', model);
+  formData.append('type', type.toLowerCase());
+  const dsId = $('dsUploadDataset').value;
+  if(dsId) formData.append('dataset_id', dsId);
+
+  const xhr = new XMLHttpRequest();
+  xhr.upload.onprogress = function(e) {
+    if(e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      bar.style.width = pct + '%';
+      status.textContent = `Uploading... ${pct}% (${e.loaded}/${e.total} bytes)`;
+    }
+  };
+  xhr.onload = function() {
+    if(xhr.status === 200) {
+      const data = JSON.parse(xhr.responseText);
+      if(data.ok) {
+        bar.style.width = '100%';
+        status.textContent = `✓ ${data.saved} images uploaded`;
+        setTimeout(() => { prog.style.display = 'none'; load(); }, 1500);
+      } else {
+        status.textContent = '✗ ' + (data.error||'Upload failed');
+      }
+    } else {
+      status.textContent = '✗ Upload failed';
+    }
+  };
+  xhr.onerror = function() { status.textContent = '✗ Network error'; };
+  xhr.open('POST', '/api/dataset/upload/files', true);
+  xhr.send(formData);
+  input.value = '';
+}
+
+// ══════════════════ INLINE MODEL EDIT ══════════════════
+let editingModel = null;
+
+function toggleEditModel() {
+  const detail = document.getElementById('modelDetailContent');
+  if(!detail) return;
+  if(editingModel) {
+    editingModel = null;
+    renderModelDetail(selectedModel);
+    return;
+  }
+  const m = allData.models.find(x => x.name === selectedModel) || {};
+  editingModel = selectedModel;
+  const bio = detail.querySelector('.model-detail-bio');
+  if(bio) bio.innerHTML = `
+    <div class="f-row" style="margin-top:6px">
+      <div class="f-group"><label>Age</label><input class="f-control f-control-sm" id="editAge" value="${m.age||''}" style="width:50px"></div>
+      <div class="f-group"><label>Ethnicity</label><input class="f-control f-control-sm" id="editEth" value="${m.ethnicity||''}" style="width:100px"></div>
+      <div class="f-group"><label>Location</label><input class="f-control f-control-sm" id="editLoc" value="${m.location||''}" style="width:120px"></div>
+      <div class="f-group"><label>Persona</label><input class="f-control f-control-sm" id="editPers" value="${m.persona||''}" style="width:200px"></div>
+      <div class="f-group"><label>Kinks</label><input class="f-control f-control-sm" id="editKinks" value="${m.kinks||''}" style="width:150px"></div>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-primary btn-sm" onclick="saveModelEdit()">Save</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleEditModel()">Cancel</button>
+    </div>`;
+  const editBtn = document.getElementById('editModelBtn');
+  if(editBtn) editBtn.textContent = 'Cancel';
+}
+
+async function saveModelEdit() {
+  const r = await postAPI('/api/models/update', {
+    name: selectedModel,
+    age: $('editAge').value, ethnicity: $('editEth').value,
+    location: $('editLoc').value, persona: $('editPers').value, kinks: $('editKinks').value
+  });
+  if(r.ok) { toast('Saved'); editingModel = null; load(); }
+  else { toast('Save failed','#f87171'); }
 }
 
 // ══════════════════ VAULT ══════════════════
@@ -1661,6 +1462,3 @@ async function testRunpod() {
 
 // ══════════════════ INIT ══════════════════
 load();
-</script>
-</body>
-</html>
