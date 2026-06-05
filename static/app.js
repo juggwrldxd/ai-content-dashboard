@@ -983,7 +983,10 @@ function renderDataset() {
           <input type="checkbox" ${checked} onchange="toggleDsImage('${i.id}')" style="accent-color:#a855f7">
           <span style="color:#6b6b80">Select</span>
         </div>
-        ${i.caption ? `<div style="font-size:9px;color:#3a3a50;margin-top:4px">Caption: ${i.caption.slice(0,60)}</div>` : '<div style="font-size:9px;color:#f87171;font-style:italic;margin-top:4px">No caption</div>'}
+        <div style="margin-top:4px">
+          <input type="text" id="cap_${i.id}" value="${(i.caption||'').replace(/"/g,'&quot;')}" placeholder="Caption..." style="width:100%;font-size:10px;background:#0a0a12;border:1px solid #1f1f2e;border-radius:4px;padding:3px 5px;color:#d4d4d8;outline:none">
+          <button class="btn btn-xs btn-ghost" onclick="saveDsCaption('${i.id}')" style="margin-top:2px;font-size:9px">Save cap</button>
+        </div>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -1093,10 +1096,10 @@ async function tagSelected(status) {
 
 async function trainFromSelected() {
   if(selectedDsImages.length === 0) return toast('Select images first','#f87171');
-  const model = $('dsModelFilter').value;
-  if(model === 'all') return toast('Select a specific model','#f87171');
-  showTrainLora(model, $('dsTypeFilter').value === 'all' ? 'SFW' : $('dsTypeFilter').value);
-  $('tlImagesInfo').textContent = `${selectedDsImages.length} images selected from Dataset`;
+  const ds = allData.datasets.find(d => d.id === selectedDatasetId);
+  if(!ds) return toast('Select a dataset first','#f87171');
+  showTrainLora(ds.model, ds.type);
+  $('tlImagesInfo').textContent = `${selectedDsImages.length} images selected from ${ds.name}`;
 }
 
 // ══════════════════ NAMED DATASETS ══════════════════
@@ -1165,6 +1168,21 @@ async function uploadDatasetImages() {
   xhr.open('POST', '/api/dataset/upload/files', true);
   xhr.send(formData);
   input.value = '';
+}
+
+
+async function saveDsCaption(imgId) {
+  const input = document.getElementById('cap_' + imgId);
+  if(!input) return toast('Not found','#f87171');
+  const caption = input.value.trim();
+  const r = await fetch('/api/dataset/images/caption', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({image_id: imgId, caption})
+  });
+  const data = await r.json();
+  if(data.ok) { toast('Caption saved'); load(); }
+  else { toast('Save failed','#f87171'); }
 }
 
 // ══════════════════ INLINE MODEL EDIT ══════════════════
