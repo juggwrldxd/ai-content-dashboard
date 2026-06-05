@@ -138,6 +138,15 @@ def save_data_file(name, data):
     except: pass
 
 app = FastAPI()
+# No-cache headers for all responses
+from fastapi.responses import Response
+@app.middleware("http")
+async def no_cache_middleware(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith(("/static/", "/")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    return response
+
 # Serve static files (CSS, JS)
 HERE = Path(__file__).parent
 static_dir = HERE / "static"
@@ -1114,8 +1123,11 @@ def get_status():
 # ── ROOT ──
 @app.get("/", response_class=HTMLResponse)
 def index():
+    from fastapi.responses import Response
     html = Path(__file__).parent / "dashboard.html"
-    return html.read_text() if html.exists() else "<h1>Dashboard not built</h1>"
+    content = html.read_text() if html.exists() else "<h1>Dashboard not built</h1>"
+    return Response(content=content, media_type="text/html",
+                    headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"})
 
 HERE = Path(__file__).parent
 
