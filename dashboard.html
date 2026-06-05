@@ -449,9 +449,17 @@ function switchPage(p) {
 
 function closeModal(id) { $(id).style.display = 'none'; }
 
-async function fetchAPI(path) {
-  try { const r = await fetch(path); return await r.json(); }
-  catch(e) { return {}; }
+async function fetchAPI(path, timeoutMs=5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const r = await fetch(path, {signal: controller.signal});
+    clearTimeout(timer);
+    return await r.json();
+  } catch(e) {
+    clearTimeout(timer);
+    return {};
+  }
 }
 async function postAPI(path, data) {
   try {
@@ -1612,51 +1620,63 @@ function renderSettingsTab(tab) {
       </div>`,
 
       runpod: `<div class="card">
-      <div class="card-title">RunPod Configuration</div>
+      <div class="card-title">RunPod — Connection</div>
       <div class="f-row" style="margin-bottom:10px">
         <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:6px">
-          <input type="checkbox" ${rp.enabled?'checked':''} id="rpEnabled" onchange="toggleRunpod()"> <strong>RunPod Integration ${rp.enabled?'ON':'OFF'}</strong>
+          <input type="checkbox" ${rp.enabled?'checked':''} id="rpEnabled" onchange="toggleRunpod()"> <strong>RunPod ${rp.enabled?'ON':'OFF'}</strong>
         </label>
-        <span class="pill ${rp.enabled?'pill-green':'pill-gray'}">${rp.enabled?'Active':'Disabled'}</span>
+        <span class="pill ${rp.enabled?'pill-green':'pill-gray'}">${rp.enabled?'Active':'Inactive'}</span>
       </div>
       <div id="rpConfigFields" style="${rp.enabled?'':'opacity:0.4;pointer-events:none'}">
-        <div class="f-group" style="margin-bottom:8px"><label>API Key</label><input class="f-control f-control-sm" id="rpApiKey" value="${rp.api_key||''}" placeholder="rpr_..." style="width:100%"></div>
-        <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Training Endpoint ID</label><input class="f-control f-control-sm" id="rpTrainEndpoint" value="${rp.endpoint_id||''}" style="width:100%"></div>
-          <div class="f-group"><label>Generation Endpoint ID</label><input class="f-control f-control-sm" id="rpGenEndpoint" value="${rp.gen_endpoint_id||''}" style="width:100%"></div>
+        <div class="f-group" style="margin-bottom:6px"><label>API Key</label><input class="f-control f-control-sm" id="rpApiKey" value="${rp.api_key||''}" placeholder="rpr_..." style="width:100%"></div>
+        <div class="f-row" style="margin-bottom:6px">
+          <div class="f-group"><label>Training Endpoint</label><input class="f-control f-control-sm" id="rpTrainEndpoint" value="${rp.endpoint_id||''}" style="width:100%"></div>
+          <div class="f-group"><label>Gen Endpoint</label><input class="f-control f-control-sm" id="rpGenEndpoint" value="${rp.gen_endpoint_id||''}" style="width:100%"></div>
         </div>
-        <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Workflow template</label><input class="f-control f-control-sm" id="rpTemplate" value="${rp.template||'sdxl_comfyui'}" style="width:160px"></div>
-          <div class="f-group"><label>Storage volume ID</label><input class="f-control f-control-sm" id="rpStorageVol" value="${rp.storage_volume_id||''}" style="width:160px"></div>
+        <div class="f-row" style="margin-bottom:0">
+          <div class="f-group"><label>Storage Volume ID</label><input class="f-control f-control-sm" id="rpStorageVol" value="${rp.storage_volume_id||''}" style="width:100%"></div>
+          <div class="f-group"><label>Template</label><input class="f-control f-control-sm" id="rpTemplate" value="${rp.template||'sdxl_comfyui'}" style="width:160px"></div>
         </div>
-        <div class="card-title" style="margin-top:16px">SFW params (RealVisXL v5.0)</div>
-        <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Checkpoint</label><input class="f-control f-control-sm" id="rpSfwCkpt" value="${rp.sfw_checkpoint||'RealVisXL_v5.0'}" style="width:160px"></div>
-          <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpSfwRepeat" type="number" value="${rp.sfw_repeat||12}" style="width:60px"></div>
-          <div class="f-group"><label>Net dim</label><input class="f-control f-control-sm" id="rpSfwDim" type="number" value="${rp.sfw_network_dim||48}" style="width:60px"></div>
-          <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="rpSfwLr" value="${rp.sfw_lr||0.0001}" style="width:80px"></div>
-          <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpSfwSteps" type="number" value="${rp.sfw_steps||1500}" style="width:70px"></div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn btn-primary btn-sm" onclick="saveRunpodConfig()">Save Connection</button>
+          <button class="btn btn-ghost btn-sm" onclick="testRunpod()">Test</button>
         </div>
-        <div class="card-title" style="margin-top:12px">NSFW params (BigLust v5 + DMD2)</div>
-        <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>Checkpoint</label><input class="f-control f-control-sm" id="rpNsfwCkpt" value="${rp.nsfw_checkpoint||'biglust_v5'}" style="width:160px"></div>
-          <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpNsfwRepeat" type="number" value="${rp.nsfw_repeat||15}" style="width:60px"></div>
-          <div class="f-group"><label>Net dim</label><input class="f-control f-control-sm" id="rpNsfwDim" type="number" value="${rp.nsfw_network_dim||64}" style="width:60px"></div>
-          <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="rpNsfwLr" value="${rp.nsfw_lr||0.00008}" style="width:80px"></div>
-          <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpNsfwSteps" type="number" value="${rp.nsfw_steps||2000}" style="width:70px"></div>
-        </div>
-        <div class="card-title" style="margin-top:12px">Default gen params</div>
-        <div class="f-row" style="margin-bottom:8px">
-          <div class="f-group"><label>CFG</label><input class="f-control f-control-sm" id="rpCfg" value="${rp.default_cfg||7.0}" style="width:60px"></div>
-          <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${rp.use_adetailer?'checked':''} id="rpADetailer"> ADetailer</label>
-          <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${rp.use_upscale?'checked':''} id="rpUpscale"> Upscale</label>
-        </div>
+        <div id="rpTestResult" style="margin-top:6px;font-size:12px"></div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:10px">
-        <button class="btn btn-primary btn-sm" onclick="saveRunpodConfig()">Save</button>
-        <button class="btn btn-ghost btn-sm" onclick="testRunpod()">Test Connection</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Training Pipeline — Dataset → LoRA .safetensors</div>
+      <div style="font-size:10.5px;color:#6b6b80;margin-bottom:10px">Settings for training sessions. Takes ~10-15 min per LoRA on RunPod.</div>
+      <div class="card-title" style="font-size:10px;color:#818cf8;margin-top:0">SFW Training (RealVisXL v5.0)</div>
+      <div class="f-row" style="margin-bottom:8px">
+        <div class="f-group"><label>Checkpoint</label><input class="f-control f-control-sm" id="rpSfwCkpt" value="${rp.sfw_checkpoint||'RealVisXL_v5.0'}" style="width:160px"></div>
+        <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpSfwRepeat" type="number" value="${rp.sfw_repeat||12}" style="width:55px"></div>
+        <div class="f-group"><label>Dim</label><input class="f-control f-control-sm" id="rpSfwDim" type="number" value="${rp.sfw_network_dim||48}" style="width:55px"></div>
+        <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="rpSfwLr" value="${rp.sfw_lr||0.0001}" style="width:75px"></div>
+        <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpSfwSteps" type="number" value="${rp.sfw_steps||1500}" style="width:65px"></div>
       </div>
-      <div id="rpTestResult" style="margin-top:8px;font-size:12px"></div>
+      <div class="card-title" style="font-size:10px;color:#f87171;margin-top:10px">NSFW Training (BigLust v5)</div>
+      <div class="f-row" style="margin-bottom:0">
+        <div class="f-group"><label>Checkpoint</label><input class="f-control f-control-sm" id="rpNsfwCkpt" value="${rp.nsfw_checkpoint||'biglust_v5'}" style="width:160px"></div>
+        <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpNsfwRepeat" type="number" value="${rp.nsfw_repeat||15}" style="width:55px"></div>
+        <div class="f-group"><label>Dim</label><input class="f-control f-control-sm" id="rpNsfwDim" type="number" value="${rp.nsfw_network_dim||64}" style="width:55px"></div>
+        <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="rpNsfwLr" value="${rp.nsfw_lr||0.00008}" style="width:75px"></div>
+        <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpNsfwSteps" type="number" value="${rp.nsfw_steps||2000}" style="width:65px"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveRunpodTraining()">Save Training Params</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Generation Pipeline — Prompt + LoRA → Images</div>
+      <div style="font-size:10.5px;color:#6b6b80;margin-bottom:10px">Settings for generation batches. Varies prompt per image, applies ADetailer + upscale.</div>
+      <div class="f-row" style="margin-bottom:8px">
+        <div class="f-group"><label>CFG Scale</label><input class="f-control f-control-sm" id="rpCfg" value="${rp.default_cfg||7.0}" style="width:60px"></div>
+        <div class="f-group"><label>Sampler</label><select class="f-control f-control-sm" id="rpSampler"><option ${'euler'} selected>Euler</option><option>DPM++ 2M</option></select></div>
+        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${rp.use_adetailer?'checked':''} id="rpADetailer"> ADetailer (face)</label>
+        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${rp.use_upscale?'checked':''} id="rpUpscale"> Upscale 2x</label>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveRunpodGen()">Save Gen Params</button>
     </div>`,
     data: `<div class="card">
           <div class="card-title">Data management</div>
@@ -1680,27 +1700,39 @@ function renderSettingsTab(tab) {
 async function saveRunpodConfig() {
   const enabled = $('rpEnabled').checked;
   await postAPI('/api/settings/update', {runpod: {
-    enabled,
-    api_key: $('rpApiKey').value,
+    enabled, api_key: $('rpApiKey').value,
     endpoint_id: $('rpTrainEndpoint').value,
     gen_endpoint_id: $('rpGenEndpoint').value,
     template: $('rpTemplate').value,
     storage_volume_id: $('rpStorageVol').value,
+  }});
+  toast('Connection saved');
+}
+
+async function saveRunpodTraining() {
+  await postAPI('/api/settings/update', {runpod: {
     sfw_checkpoint: $('rpSfwCkpt').value,
-    nsfw_checkpoint: $('rpNsfwCkpt').value,
     sfw_repeat: parseInt($('rpSfwRepeat').value) || 12,
     sfw_network_dim: parseInt($('rpSfwDim').value) || 48,
     sfw_lr: parseFloat($('rpSfwLr').value) || 0.0001,
     sfw_steps: parseInt($('rpSfwSteps').value) || 1500,
+    nsfw_checkpoint: $('rpNsfwCkpt').value,
     nsfw_repeat: parseInt($('rpNsfwRepeat').value) || 15,
     nsfw_network_dim: parseInt($('rpNsfwDim').value) || 64,
     nsfw_lr: parseFloat($('rpNsfwLr').value) || 0.00008,
     nsfw_steps: parseInt($('rpNsfwSteps').value) || 2000,
+  }});
+  toast('Training params saved');
+}
+
+async function saveRunpodGen() {
+  await postAPI('/api/settings/update', {runpod: {
     default_cfg: parseFloat($('rpCfg').value) || 7.0,
+    sampler: $('rpSampler').value,
     use_adetailer: $('rpADetailer').checked,
     use_upscale: $('rpUpscale').checked,
   }});
-  toast('RunPod config saved');
+  toast('Generation params saved');
 }
 
 function toggleRunpod() {

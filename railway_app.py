@@ -100,13 +100,37 @@ def save_data(data):
         except: pass
 
 def get_data_file(name, default):
-    """Get a dedicated JSON file from Drive."""
+    """Get data from Volume first, fall back to Drive."""
+    # Primary: Volume path
+    vol_path = volume_path(name)
+    if vol_path.exists():
+        try:
+            with open(vol_path) as f:
+                return json.load(f)
+        except: pass
+    # Secondary: Drive
     try:
         svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
-        return read_drive_json(svc, fid, name, default)
-    except: return default
+        d = read_drive_json(svc, fid, name, default)
+        # Cache to Volume for faster next read
+        if d != default:
+            try:
+                with open(vol_path, "w") as f:
+                    json.dump(d, f)
+            except: pass
+        return d
+    except: pass
+    return default
 
 def save_data_file(name, data):
+    """Save to Volume always. Try Drive as backup."""
+    # Primary: Volume
+    vol_path = volume_path(name)
+    try:
+        with open(vol_path, "w") as f:
+            json.dump(data, f)
+    except: pass
+    # Secondary: Drive (best effort)
     try:
         svc = get_drive(); fid = get_or_create_folder(svc, DRIVE_FOLDER)
         write_drive_json(svc, fid, name, data)
