@@ -659,7 +659,8 @@ from fastapi import UploadFile, File, Form
 async def upload_dataset_files(
     files: list[UploadFile] = File(...),
     model: str = Form(""),
-    type: str = Form("sfw")
+    type: str = Form("sfw"),
+    dataset_id: str = Form("")
 ):
     """Upload actual image files to the volume and create dataset entries."""
     if not model: return {"ok":False, "error":"Model required"}
@@ -676,10 +677,10 @@ async def upload_dataset_files(
             out.write(content)
         saved.append({"filename": safe_name, "original": f.filename, "size": len(content)})
     
-    # Also create JSON entries
+    # Also create JSON entries with dataset_id
     images = get_data_file("dataset_images.json", [])
     for s in saved:
-        images.append({
+        entry = {
             "id": f"img_{int(datetime.datetime.utcnow().timestamp() * 1000)}_{len(images)}",
             "model": model,
             "type": type.lower(),
@@ -691,8 +692,20 @@ async def upload_dataset_files(
             "status": "new",
             "uploaded_at": datetime.datetime.utcnow().isoformat(),
             "file_path": f"datasets/{model.lower()}/{type.lower()}/{s['filename']}"
-        })
+        }
+        if dataset_id:
+            entry["dataset_id"] = dataset_id
+        images.append(entry)
     save_data_file("dataset_images.json", images)
+    
+    # Update dataset image count
+    if dataset_id:
+        datasets = get_data_file("datasets.json", [])
+        for ds in datasets:
+            if ds.get("id") == dataset_id:
+                ds["image_count"] = len([i for i in images if i.get("dataset_id") == dataset_id])
+                break
+        save_data_file("datasets.json", datasets)
     
     return {"ok":True, "saved": len(saved)}
 

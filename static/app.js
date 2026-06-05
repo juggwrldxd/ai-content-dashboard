@@ -1566,4 +1566,9 @@ async function testRunpod() {
 }
 
 // ══════════════════ INIT ══════════════════
-load();
+// Wait for DOM to be fully loaded before running
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', load);
+} else {
+  load();
+}
