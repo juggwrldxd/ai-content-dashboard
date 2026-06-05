@@ -8,6 +8,30 @@ from pydantic import BaseModel
 from typing import Optional
 
 DRIVE_FOLDER = "ai_content_business_data"
+# Railway Volume path (persistent storage for images/files)
+DATA_DIR = Path("/data/ai_content_business")
+ALT_DATA_DIR = Path.home() / "ai_content_business_data"
+try:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+except (PermissionError, OSError):
+    pass
+ALT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+def get_data_dir():
+    """Return Railway Volume path if mounted, else local fallback."""
+    if DATA_DIR.exists() and DATA_DIR.is_dir():
+        # Quick check: can we write to it?
+        try:
+            (DATA_DIR / ".write_test").touch()
+            (DATA_DIR / ".write_test").unlink()
+            return DATA_DIR
+        except:
+            pass
+    return ALT_DATA_DIR
+
+def volume_path(*parts):
+    return get_data_dir().joinpath(*parts)
+
 MEMORY = {"models":[],"payments":[],"accounts":[],"captions":[],"scraping":[],"gallery":[],"pipeline":{}}
 DEFAULT_MODELS = [
     {"name":"Annie","age":"21","ethnicity":"Asian","location":"Los Angeles","persona":"College girl, soft dom, pet play","style":"SFW+","nsfw_level":"mild","kinks":"Pet play, Lingerie","status":"active","revenue":1420,"images":180,"followers":1200,"fans":520,"platforms":["IG","X","Reddit"]},
@@ -506,7 +530,7 @@ def get_settings():
         "accounts": {"cron_schedule":"every 2h","platforms":["X","Telegram","Reddit","IG"],"auto_relogin":False,"notify_on_sync":True},
         "content": {"nsfw_detector":"fal","confidence_threshold":0.85,"auto_captions":True,"include_emojis":True,"include_hashtags":True},
         "storage": {"drive_folder":"ai_content_business_data","backup_enabled":False},
-        "runpod": {"api_key":"","endpoint_id":"","gen_endpoint_id":"","default_checkpoint":"biglust_v5","template":"sdxl_comfyui"}
+        "runpod": {"enabled":False,"api_key":"","endpoint_id":"","gen_endpoint_id":"","default_checkpoint":"RealVisXL_v5.0","template":"sdxl_comfyui","default_repeat":12,"default_network_dim":48,"default_lr":0.0001,"default_steps":1500,"default_cfg":7.0,"use_adetailer":True,"use_upscale":True,"storage_volume_id":""}
     })
     settings["_drive_status"] = "connected" if MEMORY.get("_drive") else "memory_only"
     return settings
@@ -563,6 +587,238 @@ def batch_add_images(data: dict):
         added.append(new["id"])
     save_data_file("dataset_images.json", images)
     return {"ok":True, "count": len(added), "ids": added}
+
+# ── FILE UPLOAD (stores images on Railway Volume) ──
+from fastapi import UploadFile, File, Form
+
+@app.post("/api/dataset/upload/files")
+async def upload_dataset_files(
+    files: list[UploadFile] = File(...),
+    model: str = Form(""),
+    type: str = Form("sfw")
+):
+    """Upload actual image files to the volume and create dataset entries."""
+    if not model: return {"ok":False, "error":"Model required"}
+    model_dir = volume_path("datasets", model.lower(), type.lower())
+    model_dir.mkdir(parents=True, exist_ok=True)
+    
+    saved = []
+    for f in files:
+        ext = Path(f.filename).suffix if f.filename else ".jpg"
+        safe_name = f"img_{int(datetime.datetime.utcnow().timestamp() * 1000)}_{len(saved)}{ext}"
+        content = await f.read()
+        filepath = model_dir / safe_name
+        with open(filepath, "wb") as out:
+            out.write(content)
+        saved.append({"filename": safe_name, "original": f.filename, "size": len(content)})
+    
+    # Also create JSON entries
+    images = get_data_file("dataset_images.json", [])
+    for s in saved:
+        images.append({
+            "id": f"img_{int(datetime.datetime.utcnow().timestamp() * 1000)}_{len(images)}",
+            "model": model,
+            "type": type.lower(),
+            "filename": s["filename"],
+            "original_name": s["original"],
+            "file_size": s["size"],
+            "caption": "",
+            "keywords": [],
+            "status": "new",
+            "uploaded_at": datetime.datetime.utcnow().isoformat(),
+            "file_path": f"datasets/{model.lower()}/{type.lower()}/{s['filename']}"
+        })
+    save_data_file("dataset_images.json", images)
+    
+    return {"ok":True, "saved": len(saved)}
+
+@app.get("/api/dataset/file/{model}/{type}/{filename}")
+def serve_dataset_file(model: str, type: str, filename: str):
+    """Serve an uploaded dataset image for preview."""
+    from fastapi.responses import FileResponse
+    filepath = volume_path("datasets", model.lower(), type.lower(), filename)
+    if filepath.exists():
+        return FileResponse(str(filepath))
+    return JSONResponse({"error":"not found"}, status_code=404)
+
+# ── DATASET CAPTIONS ──
+class DatasetCaption(BaseModel):
+    image_id: str; caption: str; keywords: Optional[list] = []
+
+@app.post("/api/dataset/images/caption")
+def set_dataset_caption(entry: DatasetCaption):
+    images = get_data_file("dataset_images.json", [])
+    for i, img in enumerate(images):
+        if img.get("id") == entry.image_id:
+            images[i]["caption"] = entry.caption
+            if entry.keywords:
+                images[i]["keywords"] = entry.keywords
+            save_data_file("dataset_images.json", images)
+            return {"ok":True}
+    return {"ok":False}
+
+@app.post("/api/dataset/images/auto_caption")
+def auto_caption_images(data: dict):
+    """Generate captions for images using model persona."""
+    images = get_data_file("dataset_images.json", [])
+    _, _, d = get_data()
+    models = d.get("models", DEFAULT_MODELS)
+    ids = data.get("ids", [])
+    count = 0
+    for i, img in enumerate(images):
+        if img.get("id") in ids:
+            model_info = next((m for m in models if m["name"].lower() == img["model"].lower()), {})
+            persona = model_info.get("persona", "person")
+            img_type = img.get("type", "sfw")
+            # Generate a realistic caption based on persona
+            templates = [
+                f"{persona.split(',')[0] if ',' in persona else persona} portrait, natural lighting, casual pose",
+                f"Candid shot of {persona.split(',')[0] if ',' in persona else persona}, soft lighting, genuine smile",
+                f"{persona.split(',')[0] if ',' in persona else persona} in {random.choice(['casual wear', 'outdoor setting', 'natural pose'])}",
+            ]
+            images[i]["caption"] = random.choice(templates)
+            images[i]["keywords"] = ["portrait", img_type, img["model"].lower()]
+            count += 1
+    save_data_file("dataset_images.json", images)
+    return {"ok":True, "count": count}
+
+# ── EXPORT TRAINING PACKAGE ──
+@app.post("/api/dataset/export/training")
+def export_training_package(data: dict):
+    """Export selected dataset images as a training package zip."""
+    import zipfile
+    ids = data.get("ids", [])
+    model = data.get("model", "")
+    base_model = data.get("base_model", "RealVisXL_v5.0")
+    repeat = data.get("repeat", 12)
+    network_dim = data.get("network_dim", 48)
+    lr = data.get("lr", 0.0001)
+    trigger = data.get("trigger_word", "")
+    
+    images = get_data_file("dataset_images.json", [])
+    selected = [i for i in images if i.get("id") in ids]
+    if not selected: return {"ok":False, "error":"No images selected"}
+    
+    export_dir = volume_path("exports")
+    export_dir.mkdir(exist_ok=True)
+    zip_name = f"training_{model.lower()}_{int(datetime.datetime.utcnow().timestamp())}.zip"
+    zip_path = export_dir / zip_name
+    
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        # Add images
+        for img in selected:
+            fpath = volume_path(img.get("file_path", ""))
+            if fpath.exists():
+                zf.write(fpath, f"images/{img['filename']}")
+        
+        # Add caption file
+        captions = {img["filename"]: img.get("caption", "") for img in selected}
+        zf.writestr("captions.json", json.dumps(captions, indent=2))
+        
+        # Add training config
+        config = {
+            "model": model,
+            "base_model": base_model,
+            "lora_name": data.get("lora_name", f"{model.lower()}_lora"),
+            "trigger_word": trigger,
+            "training_params": {
+                "repeat": repeat,
+                "learning_rate": lr,
+                "network_dim": network_dim,
+                "resolution": 1024,
+                "optimizer": "AdamW",
+                "scheduler": "cosine",
+                "steps": data.get("steps", 1500)
+            },
+            "images_count": len(selected),
+            "exported_at": datetime.datetime.utcnow().isoformat()
+        }
+        zf.writestr("training_config.json", json.dumps(config, indent=2))
+        
+        # Add README
+        readme = f"""# Training Package: {model}
+Created: {datetime.datetime.utcnow().isoformat()}
+
+## Steps:
+1. Upload images/ folder to RunPod storage
+2. Load training_config.json in Kohya GUI or your training script
+3. Set base model: {base_model}
+4. Train with params from training_config.json
+5. Output .safetensors should be named {data.get("lora_name", f"{model.lower()}_lora")}.safetensors
+
+## Prompt Tags:
+Use trigger word: {trigger or model.lower()}
+"""
+        zf.writestr("README.txt", readme)
+    
+    return {"ok":True, "zip_file": zip_name, "size_bytes": zip_path.stat().st_size, "images": len(selected)}
+
+# ── EXPORT GENERATION PACKAGE ──
+@app.post("/api/generate/export")
+def export_generation_package(data: dict):
+    """Export a generation workflow package for RunPod."""
+    import zipfile
+    model = data.get("model", "")
+    lora_name = data.get("lora_name", "")
+    prompt = data.get("prompt", "")
+    neg_prompt = data.get("neg_prompt", "")
+    count = data.get("count", 4)
+    steps = data.get("steps", 30)
+    cfg = data.get("cfg", 7.0)
+    use_adetailer = data.get("use_adetailer", True)
+    use_upscale = data.get("use_upscale", True)
+    
+    export_dir = volume_path("exports")
+    export_dir.mkdir(exist_ok=True)
+    zip_name = f"gen_{model.lower()}_{int(datetime.datetime.utcnow().timestamp())}.zip"
+    zip_path = export_dir / zip_name
+    
+    workflow = {
+        "comfyui_workflow": "sdxl_generation",
+        "lora": lora_name,
+        "base_model": data.get("base_model", "RealVisXL_v5.0"),
+        "prompt": prompt,
+        "negative_prompt": neg_prompt,
+        "batch_size": 1,
+        "batch_count": count,
+        "steps": steps,
+        "cfg": cfg,
+        "sampler": "euler",
+        "scheduler": "normal",
+        "adetailer": use_adetailer,
+        "upscale": use_upscale,
+        "upscale_to": 2048 if use_upscale else 1024,
+        "seed": data.get("seed", -1),
+        "varied_prompts": data.get("varied_prompts", True)
+    }
+    
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr("generation_workflow.json", json.dumps(workflow, indent=2))
+        zf.writestr("README.txt", f"""# Generation Package: {model}
+
+## Steps:
+1. Upload this workflow to RunPod ComfyUI
+2. Make sure LoRA file "{lora_name}" is available
+3. Load generation_workflow.json
+4. Run
+5. Output: {count} images
+
+## Settings:
+- ADetailer: {'ON' if use_adetailer else 'OFF'}
+- Upscale to 2048: {'ON' if use_upscale else 'OFF'}
+- Varied prompts: {'ON' if workflow['varied_prompts'] else 'OFF'}
+""")
+    
+    return {"ok":True, "zip_file": zip_name, "size_bytes": zip_path.stat().st_size}
+
+# ── DOWNLOAD EXPORTED FILES ──
+@app.get("/api/exports/download/{filename}")
+def download_export(filename: str):
+    from fastapi.responses import FileResponse
+    filepath = volume_path("exports", filename)
+    if filepath.exists():
+        return FileResponse(str(filepath), media_type="application/zip", filename=filename)
+    return JSONResponse({"error":"not found"}, status_code=404)
 
 @app.post("/api/dataset/images/update")
 def update_dataset_image(data: dict):

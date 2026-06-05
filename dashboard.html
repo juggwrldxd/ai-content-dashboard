@@ -62,14 +62,18 @@ select.f-control option{background:#0a0a12;color:#fff}
 .prio-item.high{border-left:3px solid #f87171}
 .prio-item.medium{border-left:3px solid #fbbf24}
 .prio-item.low{border-left:3px solid #6b6b80}
-.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.model-card{background:#0c0c16;border:1px solid #14141f;border-radius:12px;padding:16px;cursor:pointer;transition:all .15s}
-.model-card:hover{border-color:#a855f7;background:#0f0f1a}
-.model-card .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:600;margin-bottom:10px}
-.model-card .mc-name{font-size:15px;font-weight:600;color:#fff}
-.model-card .mc-bio{font-size:11px;color:#6b6b80;margin:2px 0 8px}
-.model-card .mc-stat{font-size:11px;color:#a1a1aa;display:flex;gap:12px;flex-wrap:wrap}
-.model-card .mc-stat span{display:flex;align-items:center;gap:3px}
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.model-card{background:#0c0c16;border:1px solid #14141f;border-radius:10px;padding:14px;cursor:pointer;transition:all .15s;position:relative;min-height:140px;display:flex;flex-direction:column}
+.model-card:hover{border-color:#a855f7;background:#0f0f1a;transform:translateY(-1px)}
+.model-card:active{transform:translateY(0)}
+.model-card .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:600;margin-bottom:8px;flex-shrink:0}
+.model-card .mc-name{font-size:14px;font-weight:600;color:#fff}
+.model-card .mc-bio{font-size:10.5px;color:#6b6b80;margin:1px 0 6px;line-height:1.3}
+.model-card .mc-stat{font-size:11px;color:#a1a1aa;display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+.model-card .mc-stat span{display:flex;align-items:center;gap:2px}
+.model-card .mc-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
+.model-card .mc-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border:none;color:#6b6b80;font-size:13px;width:22px;height:22px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .1s}
+.model-card .mc-del:hover{color:#f87171;background:rgba(239,68,68,.15)}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:8px 10px;color:#6b6b80;font-weight:500;border-bottom:1px solid #14141f;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
@@ -191,15 +195,29 @@ tr:hover td{background:#0a0a12}
     <select class="f-control f-control-sm" id="dsModelFilter" onchange="renderDataset()"><option value="all">All models</option></select>
     <select class="f-control f-control-sm" id="dsTypeFilter" onchange="renderDataset()"><option value="all">All types</option><option>SFW</option><option>NSFW</option></select>
     <select class="f-control f-control-sm" id="dsStatusFilter" onchange="renderDataset()"><option value="all">All status</option><option value="new">New</option><option value="used">Used</option><option value="rejected">Rejected</option></select>
-    <button class="btn btn-primary btn-sm" onclick="document.getElementById('dsFileInput').click()">+ Upload</button>
-    <input type="file" id="dsFileInput" multiple accept="image/*" style="display:none" onchange="uploadDatasetImages()">
   </div></div>
+  <!-- Upload section with its OWN model picker (not the filter) -->
+  <div class="card">
+    <div class="card-title">Upload Images</div>
+    <div class="f-row">
+      <div class="f-group"><label>Model</label><select class="f-control f-control-sm" id="dsUploadModel"><option value="">— Select —</option></select></div>
+      <div class="f-group"><label>Type</label><select class="f-control f-control-sm" id="dsUploadType"><option>SFW</option><option>NSFW</option></select></div>
+      <div class="f-group">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('dsFileInput').click()">Choose Files</button>
+        <input type="file" id="dsFileInput" multiple accept="image/*" style="display:none">
+      </div>
+    </div>
+    <div id="dsUploadStatus" style="font-size:11px;color:#6b6b80;margin-top:6px"></div>
+  </div>
   <div id="dsStats" class="card" style="display:none"></div>
-  <div id="dsGrid"><div style="color:#6b6b80;font-size:13px;text-align:center;padding:40px">Upload images to start building datasets</div></div>
-  <div style="margin-top:8px;display:flex;gap:8px" id="dsActions" style="display:none">
+  <div id="dsGrid"></div>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap" id="dsActions">
     <button class="btn btn-sm btn-primary" id="dsTrainBtn" style="display:none" onclick="trainFromSelected()">Train LoRA from Selected</button>
-    <button class="btn btn-sm btn-ghost" id="dsTagUsedBtn" style="display:none" onclick="tagSelected('used')">Mark as Used</button>
-    <button class="btn btn-sm btn-ghost" id="dsTagRejectBtn" style="display:none" onclick="tagSelected('rejected')">Reject Selected</button>
+    <button class="btn btn-sm btn-ghost" id="dsAutoCapBtn" style="display:none" onclick="autoCaptionSelected()">Auto-Caption</button>
+    <button class="btn btn-sm btn-ghost" id="dsExportBtn" style="display:none" onclick="exportTrainingPackage()">Export Training Package</button>
+    <button class="btn btn-sm btn-ghost" id="dsTagUsedBtn" style="display:none" onclick="tagSelected('used')">Mark Used</button>
+    <button class="btn btn-sm btn-ghost" id="dsTagRejectBtn" style="display:none" onclick="tagSelected('rejected')">Reject</button>
   </div>
 </div>
 
@@ -294,7 +312,11 @@ tr:hover td{background:#0a0a12}
     <div class="f-group" style="margin-bottom:8px"><label>Custom name</label><input class="f-control f-control-sm" id="tlCustomName" placeholder="e.g. annie_red_dress_v2" style="width:100%"></div>
     <div class="f-group" style="margin-bottom:8px"><label>Model</label><select class="f-control f-control-sm" id="tlModel"></select></div>
     <div class="f-group" style="margin-bottom:8px"><label>Type</label><select class="f-control f-control-sm" id="tlType"><option>SFW</option><option>NSFW</option></select></div>
-    <div class="f-group" style="margin-bottom:8px"><label>Dataset images</label><div id="tlImagesInfo" style="font-size:11px;color:#6b6b80">0 selected. Go to Dataset page first.</div></div>
+    <div class="f-group" style="margin-bottom:8px"><label>Dataset images</label>
+      <div id="tlImagesInfo" style="font-size:11px;color:#6b6b80;margin-bottom:4px">0 selected</div>
+      <select class="f-control f-control-sm" id="tlDatasetSelect" onchange="loadDatasetForTraining()">
+        <option value="">— Select saved dataset —</option>
+      </select>
     <div class="f-group" style="margin-bottom:8px"><label>Source / Method</label>
       <select class="f-control f-control-sm" id="tlSource">
         <option value="uploaded">Upload .safetensors later</option>
@@ -339,6 +361,18 @@ tr:hover td{background:#0a0a12}
     <div class="f-row" style="margin-bottom:8px">
       <div class="f-group"><label>NSFW level</label><select class="f-control f-control-sm" id="gmNsfw"><option>SFW</option><option>Mild</option><option>Explicit</option></select></div>
       <div class="f-group"><label>Count</label><select class="f-control f-control-sm" id="gmCount"><option>4</option><option>8</option><option>12</option><option>20</option><option>30</option><option>50</option></select></div>
+    </div>
+    <div class="f-group" style="margin-bottom:8px"><label>Source / Method</label>
+      <select class="f-control f-control-sm" id="gmSource">
+        <option value="batch">Create batch (manage)</option>
+        <option value="runpod">RunPod API (auto-gen)</option>
+        <option value="export">Export ComfyUI workflow</option>
+      </select>
+    </div>
+    <div class="f-row" style="margin-bottom:8px" id="gmExtraOptions">
+      <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked id="gmADetailer"> ADetailer (face fix)</label>
+      <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked id="gmUpscale"> Upscale to 2048</label>
+      <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" checked id="gmVaried"> Varied prompts</label>
     </div>
     <div class="f-group" style="margin-bottom:8px"><label>Prompt</label><textarea class="f-control" id="gmPrompt" style="min-height:50px" placeholder="Describe the image..."></textarea></div>
     <div class="f-group" style="margin-bottom:8px"><label>Negative prompt</label><textarea class="f-control" id="gmNegPrompt" style="min-height:30px" placeholder="bad quality, blurry..."></textarea></div>
@@ -519,21 +553,21 @@ function renderModels() {
   const models = allData.models || [];
   $('modelsGrid').innerHTML = models.map(m => {
     const initials = (m.name||'?').slice(0,2).toUpperCase();
-    return `<div class="model-card" onclick="selectModel('${m.name}')" style="position:relative;cursor:pointer">
-          <button onclick="event.stopPropagation();deleteModel('${m.name}')" style="position:absolute;top:8px;right:8px;background:none;border:none;color:#6b6b80;font-size:14px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1" onmouseover="this.style.color='#f87171';this.style.background='rgba(239,68,68,.1)'" onmouseout="this.style.color='#6b6b80';this.style.background='none'">×</button>
+    return `<div class="model-card" onclick="selectModel('${m.name}')">
+          <button class="mc-del" onclick="event.stopPropagation();deleteModel('${m.name}')">×</button>
           <div class="avatar">${initials}</div>
           <div class="mc-name">${m.name}</div>
       <div class="mc-bio">${m.age||''} · ${m.ethnicity||''} · ${m.location||''}</div>
       <div class="mc-stat">
-        <span>💰 $${m.revenue||0}</span>
-        <span>👥 ${m.fans||0} fans</span>
-        <span>🖼 ${m.images||0}</span>
-      </div>
-      <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
-        ${(m.platforms||[]).map(p => `<span class="tag">${p}</span>`).join('')}
-        <span class="tag ${(m.lora_count||0) > 0 ? 'tag-green' : 'tag-yellow'}">${m.lora_count||0} LoRAs</span>
-      </div>
-    </div>`;
+              <span>💰 $${m.revenue||0}</span>
+              <span>👥 ${m.fans||0} fans</span>
+              <span>🖼 ${m.images||0}</span>
+            </div>
+            <div class="mc-tags">
+              ${(m.platforms||[]).map(p => `<span class="tag">${p}</span>`).join('')}
+              <span class="tag ${(m.lora_count||0) > 0 ? 'tag-green' : 'tag-yellow'}">${m.lora_count||0} LoRAs</span>
+            </div>
+          </div>`;
   }).join('');
   $('addModelForm').style.display = 'none';
 }
@@ -898,7 +932,38 @@ function showTrainLora(model, type) {
   const models = allData.models || [];
   $('tlModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
   if(type) $('tlType').value = type;
+  
+  // Populate dataset selector
+  const images = allData.dataset || [];
+  const dsSel = $('tlDatasetSelect');
+  if(dsSel) {
+    const byModel = {};
+    images.forEach(i => {
+      if(i.status === 'new' || i.status === 'used') {
+        const key = `${i.model} - ${i.type.toUpperCase()} (${i.status})`;
+        if(!byModel[key]) byModel[key] = [];
+        byModel[key].push(i.id);
+      }
+    });
+    dsSel.innerHTML = '<option value="">— Select saved dataset —</option>' +
+      Object.entries(byModel).map(([key, ids]) =>
+        `<option value="${ids.join(',')}">${key} — ${ids.length} images</option>`
+      ).join('');
+  }
+  
   $('trainLoraModal').style.display = 'flex';
+}
+
+function loadDatasetForTraining() {
+  const sel = $('tlDatasetSelect');
+  if(sel && sel.value) {
+    const ids = sel.value.split(',');
+    selectedDsImages = ids;
+    $('tlImagesInfo').textContent = `${ids.length} images selected`;
+  } else {
+    selectedDsImages = [];
+    $('tlImagesInfo').textContent = '0 selected';
+  }
 }
 
 async function saveTrainLora() {
@@ -1163,7 +1228,41 @@ async function saveGenerateBatch() {
   const nsfw = $('gmNsfw').value.toLowerCase();
   const count = parseInt($('gmCount').value) || 4;
   const prompt = $('gmPrompt').value.trim();
+  const source = $('gmSource').value;
   if(!prompt) return toast('Enter a prompt','#f87171');
+
+  if(source === 'export') {
+    const r = await postAPI('/api/generate/export', {
+      model, lora_name: loraId, prompt, neg_prompt: $('gmNegPrompt').value,
+      count, steps: parseInt($('gmSteps').value) || 30,
+      cfg: parseFloat($('gmCfg').value) || 7.0, seed: parseInt($('gmSeed').value) || -1,
+      use_adetailer: $('gmADetailer').checked, use_upscale: $('gmUpscale').checked,
+      varied_prompts: $('gmVaried').checked, base_model: 'RealVisXL_v5.0'
+    });
+    if(r.ok && r.zip_file) {
+      toast('Gen workflow exported! Downloading...');
+      window.location.href = `/api/exports/download/${r.zip_file}`;
+    } else {
+      toast('Export failed','#f87171');
+    }
+    closeModal('genModal');
+    return;
+  }
+
+  if(source === 'runpod') {
+    toast('Sending to RunPod...');
+    const r = await postAPI('/api/runpod/generate', {
+      model, lora_id: loraId, prompt, neg_prompt: $('gmNegPrompt').value,
+      count, steps: parseInt($('gmSteps').value) || 30,
+      cfg: parseFloat($('gmCfg').value) || 7.0, seed: parseInt($('gmSeed').value) || -1
+    });
+    if(r.ok) { toast(`RunPod gen started: ${r.runpod_job_id}`); }
+    else { toast(r.error||'RunPod failed','#f87171'); }
+    closeModal('genModal');
+    return;
+  }
+
+  // Default: create batch (management mode)
   const r = await postAPI('/api/content/batches/create', {
     model, lora_id: loraId, prompt, nsfw_level: nsfw, count,
     steps: parseInt($('gmSteps').value) || 30,
@@ -1183,6 +1282,9 @@ function renderDataset() {
   const models = allData.models || [];
   const mf = $('dsModelFilter'), tf = $('dsTypeFilter'), sf = $('dsStatusFilter');
   if(mf) mf.innerHTML = '<option value="all">All models</option>' + models.map(m => `<option>${m.name}</option>`).join('');
+  // Populate upload model picker too (separate from filter)
+  const upModel = $('dsUploadModel');
+  if(upModel) upModel.innerHTML = '<option value="">— Select —</option>' + models.map(m => `<option>${m.name}</option>`).join('');
   let filtered = images;
   if(mf && mf.value !== 'all') filtered = filtered.filter(i => i.model === mf.value);
   if(tf && tf.value !== 'all') filtered = filtered.filter(i => i.type.toUpperCase() === tf.value.toUpperCase());
@@ -1238,16 +1340,46 @@ function toggleDsImage(id) {
 async function uploadDatasetImages() {
   const input = $('dsFileInput');
   if(!input.files || input.files.length === 0) return toast('Select files','#f87171');
-  const model = $('dsModelFilter').value;
-  const type = $('dsTypeFilter').value;
-  if(model === 'all') return toast('Select a specific model first','#f87171');
-  if(type === 'all') return toast('Select SFW or NSFW first','#f87171');
+  const model = $('dsUploadModel').value;
+  const type = $('dsUploadType').value;
+  if(!model) return toast('Select a model in the upload section','#f87171');
 
-  const files = [];
-  for(let f of input.files) files.push({filename: f.name});
-  const r = await postAPI('/api/dataset/images/batch_add', {model, type: type.toLowerCase(), files});
-  if(r.ok) { toast(`${r.count} images uploaded`); load(); }
+  $('dsUploadStatus').textContent = 'Uploading...';
+  const formData = new FormData();
+  for(let f of input.files) formData.append('files', f);
+  formData.append('model', model);
+  formData.append('type', type.toLowerCase());
+  try {
+    const r = await fetch('/api/dataset/upload/files', {method:'POST', body: formData});
+    const data = await r.json();
+    if(data.ok) { toast(`${data.saved} images uploaded`); $('dsUploadStatus').textContent = ''; load(); }
+    else { toast(data.error||'Upload failed','#f87171'); }
+  } catch(e) { toast('Upload error','#f87171'); }
   input.value = '';
+}
+
+async function autoCaptionSelected() {
+  if(selectedDsImages.length === 0) return toast('Select images first','#f87171');
+  const r = await postAPI('/api/dataset/images/auto_caption', {ids: selectedDsImages});
+  if(r.ok) toast(`${r.count} captions generated`);
+  load();
+}
+
+async function exportTrainingPackage() {
+  if(selectedDsImages.length === 0) return toast('Select images first','#f87171');
+  const model = $('dsModelFilter').value;
+  if(model === 'all') return toast('Select a specific model filter','#f87171');
+  const r = await postAPI('/api/dataset/export/training', {
+    ids: selectedDsImages, model, lora_name: `${model.toLowerCase()}_training`,
+    base_model: 'RealVisXL_v5.0', repeat: 12, network_dim: 48, lr: 0.0001, trigger_word: ''
+  });
+  if(r.ok && r.zip_file) {
+    toast(`Training package ready: ${r.images} images in ${r.zip_file}`);
+    // Download the zip
+    window.location.href = `/api/exports/download/${r.zip_file}`;
+  } else {
+    toast('Export failed','#f87171');
+  }
 }
 
 async function tagSelected(status) {
@@ -1456,12 +1588,36 @@ function renderSettingsTab(tab) {
 
       runpod: `<div class="card">
       <div class="card-title">RunPod Configuration</div>
-      <div class="f-group" style="margin-bottom:8px"><label>API Key</label><input class="f-control f-control-sm" id="rpApiKey" value="${rp.api_key||''}" placeholder="rpr_..." style="width:100%"></div>
-      <div class="f-group" style="margin-bottom:8px"><label>Training Endpoint ID</label><input class="f-control f-control-sm" id="rpTrainEndpoint" value="${rp.endpoint_id||''}" placeholder="Endpoint ID for training" style="width:100%"></div>
-      <div class="f-group" style="margin-bottom:8px"><label>Generation Endpoint ID</label><input class="f-control f-control-sm" id="rpGenEndpoint" value="${rp.gen_endpoint_id||''}" placeholder="Endpoint ID for generation" style="width:100%"></div>
-      <div class="f-row" style="margin-bottom:8px">
-        <div class="f-group"><label>Default checkpoint</label><input class="f-control f-control-sm" id="rpCheckpoint" value="${rp.default_checkpoint||'biglust_v5'}" style="width:160px"></div>
-        <div class="f-group"><label>Workflow template</label><input class="f-control f-control-sm" id="rpTemplate" value="${rp.template||'sdxl_comfyui'}" style="width:140px"></div>
+      <div class="f-row" style="margin-bottom:10px">
+        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:6px">
+          <input type="checkbox" ${rp.enabled?'checked':''} id="rpEnabled" onchange="toggleRunpod()"> <strong>RunPod Integration ${rp.enabled?'ON':'OFF'}</strong>
+        </label>
+        <span class="pill ${rp.enabled?'pill-green':'pill-gray'}">${rp.enabled?'Active':'Disabled'}</span>
+      </div>
+      <div id="rpConfigFields" style="${rp.enabled?'':'opacity:0.4;pointer-events:none'}">
+        <div class="f-group" style="margin-bottom:8px"><label>API Key</label><input class="f-control f-control-sm" id="rpApiKey" value="${rp.api_key||''}" placeholder="rpr_..." style="width:100%"></div>
+        <div class="f-row" style="margin-bottom:8px">
+          <div class="f-group"><label>Training Endpoint ID</label><input class="f-control f-control-sm" id="rpTrainEndpoint" value="${rp.endpoint_id||''}" placeholder="Endpoint ID" style="width:100%"></div>
+          <div class="f-group"><label>Generation Endpoint ID</label><input class="f-control f-control-sm" id="rpGenEndpoint" value="${rp.gen_endpoint_id||''}" placeholder="Endpoint ID" style="width:100%"></div>
+        </div>
+        <div class="f-row" style="margin-bottom:8px">
+          <div class="f-group"><label>Default checkpoint</label><input class="f-control f-control-sm" id="rpCheckpoint" value="${rp.default_checkpoint||'RealVisXL_v5.0'}" style="width:160px"></div>
+          <div class="f-group"><label>Workflow template</label><input class="f-control f-control-sm" id="rpTemplate" value="${rp.template||'sdxl_comfyui'}" style="width:140px"></div>
+          <div class="f-group"><label>Storage volume ID</label><input class="f-control f-control-sm" id="rpStorageVol" value="${rp.storage_volume_id||''}" style="width:140px"></div>
+        </div>
+        <div class="card-title" style="margin-top:12px">Default training params</div>
+        <div class="f-row" style="margin-bottom:8px">
+          <div class="f-group"><label>Repeat</label><input class="f-control f-control-sm" id="rpRepeat" type="number" value="${rp.default_repeat||12}" style="width:60px"></div>
+          <div class="f-group"><label>Network dim</label><input class="f-control f-control-sm" id="rpDim" type="number" value="${rp.default_network_dim||48}" style="width:60px"></div>
+          <div class="f-group"><label>Learning rate</label><input class="f-control f-control-sm" id="rpLr" value="${rp.default_lr||0.0001}" style="width:80px"></div>
+          <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="rpSteps" type="number" value="${rp.default_steps||1500}" style="width:70px"></div>
+        </div>
+        <div class="card-title" style="margin-top:12px">Default gen params</div>
+        <div class="f-row" style="margin-bottom:8px">
+          <div class="f-group"><label>CFG</label><input class="f-control f-control-sm" id="rpCfg" value="${rp.default_cfg||7.0}" style="width:60px"></div>
+          <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${rp.use_adetailer?'checked':''} id="rpADetailer"> ADetailer</label>
+          <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${rp.use_upscale?'checked':''} id="rpUpscale"> Upscale</label>
+        </div>
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-primary btn-sm" onclick="saveRunpodConfig()">Save</button>
@@ -1489,14 +1645,31 @@ function renderSettingsTab(tab) {
     }
 
 async function saveRunpodConfig() {
+  const enabled = $('rpEnabled').checked;
   await postAPI('/api/settings/update', {runpod: {
+    enabled,
     api_key: $('rpApiKey').value,
     endpoint_id: $('rpTrainEndpoint').value,
     gen_endpoint_id: $('rpGenEndpoint').value,
     default_checkpoint: $('rpCheckpoint').value,
-    template: $('rpTemplate').value
+    template: $('rpTemplate').value,
+    storage_volume_id: $('rpStorageVol').value,
+    default_repeat: parseInt($('rpRepeat').value) || 12,
+    default_network_dim: parseInt($('rpDim').value) || 48,
+    default_lr: parseFloat($('rpLr').value) || 0.0001,
+    default_steps: parseInt($('rpSteps').value) || 1500,
+    default_cfg: parseFloat($('rpCfg').value) || 7.0,
+    use_adetailer: $('rpADetailer').checked,
+    use_upscale: $('rpUpscale').checked,
   }});
   toast('RunPod config saved');
+}
+
+function toggleRunpod() {
+  const enabled = $('rpEnabled').checked;
+  $('rpConfigFields').style.opacity = enabled ? '1' : '0.4';
+  $('rpConfigFields').style.pointerEvents = enabled ? 'auto' : 'none';
+  document.querySelector('#rpEnabled').nextElementSibling.innerHTML = `RunPod Integration ${enabled?'ON':'OFF'}`;
 }
 
 async function testRunpod() {
