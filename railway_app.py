@@ -292,16 +292,19 @@ def get_lora_versions(model: Optional[str] = None):
     return loras
 
 class LoraEntry(BaseModel):
-    model_id: str; version: int; type: str; source: Optional[str] = "uploaded"
+    model_id: str; version: Optional[int] = 1; type: str; source: Optional[str] = "uploaded"
     file_path: Optional[str] = ""; trigger_word: Optional[str] = ""
     images_trained: Optional[int] = 0; loss: Optional[float] = 0.0
     base_model: Optional[str] = "sd_xl"; steps: Optional[int] = 1500; lr: Optional[float] = 0.0001
+    custom_name: Optional[str] = ""; dataset_image_ids: Optional[list] = []
 
 @app.post("/api/lora/versions/add")
 def add_lora_version(entry: LoraEntry):
     loras = get_data_file("lora_versions.json", [])
     new = entry.dict()
-    new["id"] = f"lora_{entry.model_id.lower()}_v{entry.version}"
+    name = entry.custom_name if entry.custom_name else f"{entry.model_id.lower()}_v{entry.version or 1}"
+    new["id"] = f"lora_{name}_{int(datetime.datetime.utcnow().timestamp())}"
+    new["display_name"] = entry.custom_name or f"v{entry.version or 1} {entry.type}"
     new["trained_at"] = datetime.datetime.utcnow().isoformat()
     loras.append(new)
     save_data_file("lora_versions.json", loras)
@@ -321,7 +324,7 @@ def get_batches():
     return sorted(batches, key=lambda b: b.get("created_at",""), reverse=True)
 
 class BatchCreate(BaseModel):
-    model: str; lora_id: str; prompt: str; nsfw_level: str; count: int
+    model: str; lora_id: str; prompt: str; nsfw_level: str; count: int = 4
     steps: Optional[int] = 30; cfg: Optional[float] = 7.0; seed: Optional[int] = -1
 
 @app.post("/api/content/batches/create")
@@ -502,7 +505,8 @@ def get_settings():
         "training": {"base_model":"sd_xl_base_1.0","default_steps":1500,"default_lr":0.0001,"default_dim":64,"default_alpha":64,"auto_save_lora":True},
         "accounts": {"cron_schedule":"every 2h","platforms":["X","Telegram","Reddit","IG"],"auto_relogin":False,"notify_on_sync":True},
         "content": {"nsfw_detector":"fal","confidence_threshold":0.85,"auto_captions":True,"include_emojis":True,"include_hashtags":True},
-        "storage": {"drive_folder":"ai_content_business_data","backup_enabled":False}
+        "storage": {"drive_folder":"ai_content_business_data","backup_enabled":False},
+        "runpod": {"api_key":"","endpoint_id":"","gen_endpoint_id":"","default_checkpoint":"biglust_v5","template":"sdxl_comfyui"}
     })
     settings["_drive_status"] = "connected" if MEMORY.get("_drive") else "memory_only"
     return settings
@@ -515,6 +519,261 @@ def update_settings(data: dict):
             settings[k] = {**settings.get(k,{}), **v}
     save_data_file("settings.json", settings)
     return {"ok":True}
+
+# ══════════════════ DATASET API ══════════════════
+@app.get("/api/dataset/images")
+def get_dataset_images(model: Optional[str] = None, type: Optional[str] = None):
+    images = get_data_file("dataset_images.json", [])
+    if model: images = [i for i in images if i.get("model","").lower() == model.lower()]
+    if type: images = [i for i in images if i.get("type","").lower() == type.lower()]
+    return images
+
+class DatasetImage(BaseModel):
+    model: str; type: str; filename: str; caption: Optional[str] = ""
+    status: Optional[str] = "new"  # new, used, rejected
+
+@app.post("/api/dataset/images/add")
+def add_dataset_image(entry: DatasetImage):
+    images = get_data_file("dataset_images.json", [])
+    new = entry.dict()
+    new["id"] = f"img_{int(datetime.datetime.utcnow().timestamp() * 1000)}"
+    new["uploaded_at"] = datetime.datetime.utcnow().isoformat()
+    new["drive_path"] = f"photos_raw/{entry.model.lower()}/{entry.type.lower()}/{entry.filename}"
+    images.append(new)
+    save_data_file("dataset_images.json", images)
+    return {"ok":True, "id": new["id"]}
+
+@app.post("/api/dataset/images/batch_add")
+def batch_add_images(data: dict):
+    """data = {model, type, files: [{filename, caption?}]}"""
+    images = get_data_file("dataset_images.json", [])
+    added = []
+    for f in data.get("files", []):
+        new = {
+            "id": f"img_{int(datetime.datetime.utcnow().timestamp() * 1000)}_{len(added)}",
+            "model": data["model"],
+            "type": data.get("type","sfw"),
+            "filename": f.get("filename",""),
+            "caption": f.get("caption",""),
+            "status": "new",
+            "uploaded_at": datetime.datetime.utcnow().isoformat(),
+            "drive_path": f"photos_raw/{data['model'].lower()}/{data.get('type','sfw').lower()}/{f.get('filename','')}"
+        }
+        images.append(new)
+        added.append(new["id"])
+    save_data_file("dataset_images.json", images)
+    return {"ok":True, "count": len(added), "ids": added}
+
+@app.post("/api/dataset/images/update")
+def update_dataset_image(data: dict):
+    images = get_data_file("dataset_images.json", [])
+    for i, img in enumerate(images):
+        if img.get("id") == data.get("id"):
+            images[i].update({k:v for k,v in data.items() if k != "id"})
+            save_data_file("dataset_images.json", images)
+            return {"ok":True}
+    return {"ok":False}
+
+@app.post("/api/dataset/images/batch_tag")
+def batch_tag_images(data: dict):
+    """data = {ids: [...], status: 'used'|'rejected'|'new'}"""
+    images = get_data_file("dataset_images.json", [])
+    ids = data.get("ids", [])
+    status = data.get("status", "used")
+    count = 0
+    for i, img in enumerate(images):
+        if img.get("id") in ids:
+            images[i]["status"] = status
+            count += 1
+    save_data_file("dataset_images.json", images)
+    return {"ok":True, "updated": count}
+
+@app.post("/api/dataset/images/delete")
+def delete_dataset_image(data: dict):
+    images = get_data_file("dataset_images.json", [])
+    images = [i for i in images if i.get("id") != data.get("id")]
+    save_data_file("dataset_images.json", images)
+    return {"ok":True}
+
+# ── ACCOUNTS VAULT (credentials store) ──
+@app.get("/api/accounts/vault")
+def get_accounts_vault():
+    return get_data_file("vault.json", [])
+
+class VaultEntry(BaseModel):
+    email: str; password: str; model: str; used_at: Optional[str] = ""
+    notes: Optional[str] = ""; status: Optional[str] = "active"
+
+@app.post("/api/accounts/vault/add")
+def add_vault_entry(entry: VaultEntry):
+    vault = get_data_file("vault.json", [])
+    new = entry.dict()
+    new["id"] = f"vault_{int(datetime.datetime.utcnow().timestamp())}"
+    vault.append(new)
+    save_data_file("vault.json", vault)
+    return {"ok":True, "id": new["id"]}
+
+@app.post("/api/accounts/vault/delete")
+def delete_vault_entry(data: dict):
+    vault = get_data_file("vault.json", [])
+    vault = [v for v in vault if v.get("id") != data.get("id")]
+    save_data_file("vault.json", vault)
+    return {"ok":True}
+
+# ── ACCOUNTS SOCIAL (monitored accounts) ──
+@app.get("/api/accounts/social")
+def get_accounts_social():
+    return get_data_file("social_monitor.json", [])
+
+class SocialEntry(BaseModel):
+    handle: str; platform: str; model: str; followers: Optional[int] = 0
+    posts: Optional[int] = 0; engagement: Optional[float] = 0.0
+
+@app.post("/api/accounts/social/add")
+def add_social_entry(entry: SocialEntry):
+    social = get_data_file("social_monitor.json", [])
+    new = entry.dict()
+    new["id"] = f"social_{int(datetime.datetime.utcnow().timestamp())}"
+    new["last_checked"] = datetime.datetime.utcnow().isoformat()
+    social.append(new)
+    save_data_file("social_monitor.json", social)
+    return {"ok":True, "id": new["id"]}
+
+@app.post("/api/accounts/social/update")
+def update_social_entry(data: dict):
+    social = get_data_file("social_monitor.json", [])
+    for i, s in enumerate(social):
+        if s.get("id") == data.get("id"):
+            data["last_checked"] = datetime.datetime.utcnow().isoformat()
+            social[i].update({k:v for k,v in data.items() if k != "id"})
+            save_data_file("social_monitor.json", social)
+            return {"ok":True}
+    return {"ok":False}
+
+@app.post("/api/accounts/social/delete")
+def delete_social_entry(data: dict):
+    social = get_data_file("social_monitor.json", [])
+    social = [s for s in social if s.get("id") != data.get("id")]
+    save_data_file("social_monitor.json", social)
+    return {"ok":True}
+
+# ── RUNPOD API ──
+@app.post("/api/runpod/test")
+def test_runpod(data: dict):
+    """Test RunPod connection with provided API key."""
+    api_key = data.get("api_key", "")
+    if not api_key: return {"ok":False, "error":"No API key"}
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            "https://api.runpod.ai/v2/endpoints",
+            headers={"Authorization": f"Bearer {api_key}"}
+        )
+        resp = urllib.request.urlopen(req, timeout=10)
+        ep_data = json.loads(resp.read())
+        return {"ok":True, "endpoints": ep_data}
+    except Exception as e:
+        return {"ok":False, "error": str(e)}
+
+@app.post("/api/runpod/train")
+def runpod_train(data: dict):
+    """Trigger training on RunPod. data = {lora_id, model, dataset_images_ids, params...}"""
+    settings = get_data_file("settings.json", {})
+    rp = settings.get("runpod", {})
+    api_key = rp.get("api_key", "")
+    endpoint_id = rp.get("endpoint_id", "")
+    if not api_key or not endpoint_id:
+        return {"ok":False, "error":"RunPod not configured. Go to Settings → RunPod"}
+    
+    lora_name = data.get("lora_name", f"{data['model'].lower()}_lora")
+    trigger = data.get("trigger_word", "")
+    steps = data.get("steps", 1500)
+    lr = data.get("lr", 0.0001)
+    
+    # Build the RunPod serverless request
+    payload = {
+        "input": {
+            "workflow_type": "lora_training",
+            "lora_name": lora_name,
+            "trigger_word": trigger,
+            "steps": steps,
+            "learning_rate": lr,
+            "model_id": data.get("model", ""),
+            "dataset_images": data.get("dataset_images_ids", []),
+        }
+    }
+    
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            f"https://api.runpod.ai/v2/{endpoint_id}/runsync",
+            data=json.dumps(payload).encode(),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+        )
+        resp = urllib.request.urlopen(req, timeout=300)
+        result = json.loads(resp.read())
+        return {"ok":True, "runpod_job_id": result.get("id",""), "status": result.get("status","")}
+    except Exception as e:
+        return {"ok":False, "error": str(e)}
+
+@app.post("/api/runpod/generate")
+def runpod_generate(data: dict):
+    """Trigger generation on RunPod. data = {model, lora_id, prompt, neg_prompt, count, steps, cfg}"""
+    settings = get_data_file("settings.json", {})
+    rp = settings.get("runpod", {})
+    api_key = rp.get("api_key", "")
+    endpoint_id = rp.get("gen_endpoint_id", rp.get("endpoint_id", ""))
+    if not api_key or not endpoint_id:
+        return {"ok":False, "error":"RunPod not configured"}
+    
+    payload = {
+        "input": {
+            "workflow_type": "generation",
+            "lora_id": data.get("lora_id", ""),
+            "prompt": data.get("prompt", ""),
+            "negative_prompt": data.get("neg_prompt", ""),
+            "count": data.get("count", 4),
+            "steps": data.get("steps", 30),
+            "cfg": data.get("cfg", 7.0),
+            "seed": data.get("seed", -1),
+        }
+    }
+    
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            f"https://api.runpod.ai/v2/{endpoint_id}/runsync",
+            data=json.dumps(payload).encode(),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+        )
+        resp = urllib.request.urlopen(req, timeout=600)
+        result = json.loads(resp.read())
+        return {"ok":True, "runpod_job_id": result.get("id",""), "status": result.get("status","")}
+    except Exception as e:
+        return {"ok":False, "error": str(e)}
+
+@app.get("/api/runpod/status/{job_id}")
+def runpod_status(job_id: str):
+    settings = get_data_file("settings.json", {})
+    rp = settings.get("runpod", {})
+    api_key = rp.get("api_key", "")
+    if not api_key: return {"ok":False, "error":"Not configured"}
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            f"https://api.runpod.ai/v2/{job_id}/status",
+            headers={"Authorization": f"Bearer {api_key}"}
+        )
+        resp = urllib.request.urlopen(req, timeout=10)
+        return {"ok":True, "status": json.loads(resp.read())}
+    except Exception as e:
+        return {"ok":False, "error": str(e)}
 
 # ── STATUS ──
 @app.get("/api/status")
