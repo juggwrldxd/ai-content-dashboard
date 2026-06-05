@@ -27,7 +27,7 @@ function switchPage(p) {
   document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
   const pg = $(`page-${p}`);
   if(pg) pg.classList.add('active');
-  loadPage(p);
+  load();
 }
 
 function closeModal(id) { $(id).style.display = 'none'; }
@@ -909,57 +909,6 @@ function toggleDsImage(id) {
   if(idx > -1) selectedDsImages.splice(idx, 1);
   else selectedDsImages.push(id);
   renderDataset();
-}
-
-// Upload with real progress bar (XHR)
-function uploadDatasetImages() {
-  const input = $('dsFileInput');
-  if(!input.files || input.files.length === 0) return toast('Select files','#f87171');
-  const model = $('dsUploadModel').value;
-  const type = $('dsUploadType').value;
-  const dsId = $('dsUploadDataset').value;
-  if(!model) return toast('Select a model','#f87171');
-  if(!dsId) return toast('Select or create a dataset first','#f87171');
-
-  const bar = $('dsProgressFill');
-  const status = $('dsUploadStatus');
-  const prog = $('dsUploadProgress');
-  prog.style.display = 'block';
-  bar.style.width = '0%';
-  status.textContent = 'Starting upload...';
-
-  const formData = new FormData();
-  for(let f of input.files) formData.append('files', f);
-  formData.append('model', model);
-  formData.append('type', type.toLowerCase());
-  formData.append('dataset_id', dsId);
-
-  const xhr = new XMLHttpRequest();
-  xhr.upload.onprogress = function(e) {
-    if(e.lengthComputable) {
-      const pct = Math.round((e.loaded / e.total) * 100);
-      bar.style.width = pct + '%';
-      status.textContent = `Uploading... ${pct}% (${e.loaded}/${e.total} bytes)`;
-    }
-  };
-  xhr.onload = function() {
-    if(xhr.status === 200) {
-      const data = JSON.parse(xhr.responseText);
-      if(data.ok) {
-        bar.style.width = '100%';
-        status.textContent = `✓ ${data.saved} images uploaded`;
-        setTimeout(() => { prog.style.display = 'none'; load(); }, 1500);
-      } else {
-        status.textContent = '✗ ' + (data.error||'Upload failed');
-      }
-    } else {
-      status.textContent = '✗ Upload failed';
-    }
-  };
-  xhr.onerror = function() { status.textContent = '✗ Network error'; };
-  xhr.open('POST', '/api/dataset/upload/files', true);
-  xhr.send(formData);
-  input.value = '';
 }
 
 async function autoCaptionSelected() {
