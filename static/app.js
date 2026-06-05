@@ -17,10 +17,20 @@ function closeAllModals() {
   document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
 }
 function openModal(id) {
-  closeAllModals();
+  // Close ALL modals first
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.classList.remove('open');
+    m.style.display = '';
+  });
+
+  // Open only the requested one, forcing display
   const el = document.getElementById(id);
-  if(el) el.classList.add('open');
-  else console.warn(`Modal #${id} not found`);
+  if(el) {
+    el.classList.add('open');
+    el.style.display = 'flex';  // Force it here
+  } else {
+    console.warn(`Modal #${id} not found`);
+  }
 }
 
 function toast(msg, color='#34d399') {
@@ -44,7 +54,10 @@ function switchPage(p) {
 
 function closeModal(id) { 
   const el = document.getElementById(id);
-  if(el) el.classList.remove('open');
+  if(el) {
+    el.classList.remove('open');
+    el.style.display = '';  // Remove inline style
+  }
 }
 
 async function fetchAPI(path, timeoutMs=12000) {
