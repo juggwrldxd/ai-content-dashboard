@@ -388,10 +388,6 @@ function renderModelDetail(name) {
             <div class="lora-version">v${l.version} SFW</div>
             <div class="lora-meta">${l.images_trained||0} images · Loss: ${l.loss||'?'}</div>
             <div class="lora-meta">Trigger: ${l.trigger_word||'—'}</div>
-            <div style="margin-top:6px;display:flex;gap:4px">
-              <button class="btn btn-xs btn-ghost" onclick="toast('Test gen in Pipeline')">Test</button>
-              <button class="btn btn-xs btn-ghost" onclick="toast('Edit LoRA')">Edit</button>
-            </div>
           </div>`).join('')}
       </div>
     </div>
@@ -405,10 +401,6 @@ function renderModelDetail(name) {
             <div class="lora-version">v${l.version} NSFW</div>
             <div class="lora-meta">${l.images_trained||0} images · Loss: ${l.loss||'?'}</div>
             <div class="lora-meta">Trigger: ${l.trigger_word||'—'}</div>
-            <div style="margin-top:6px;display:flex;gap:4px">
-              <button class="btn btn-xs btn-ghost" onclick="toast('Test gen in Pipeline')">Test</button>
-              <button class="btn btn-xs btn-ghost" onclick="toast('Edit LoRA')">Edit</button>
-            </div>
           </div>`).join('')}
       </div>
     </div>
@@ -580,21 +572,14 @@ function renderContentLib() {
   $('contentGrid').innerHTML = filtered.length === 0
     ? '<div class="card" style="text-align:center;padding:30px;color:#6b6b80;font-size:13px">Library empty. Validate images in Pipeline →</div>'
     : `<div class="grid-4">${filtered.slice(0,40).map(c => `
-      <div class="img-thumb" onclick="showContentDetail('${c.id||c.batch_id}')" style="cursor:pointer">
+      <div class="img-thumb" style="cursor:default">
         <div style="font-size:24px;font-weight:300;color:#a855f7;margin-bottom:4px">🖼</div>
         <div style="font-size:11px;color:#d4d4d8">${c.model||'?'}</div>
         <span class="tag ${c.nsfw_level==='explicit'?'tag-red':c.nsfw_level==='mild'?'tag-yellow':'tag-green'}">${c.nsfw_level||'sfw'}</span>
         <span class="tag ${c.status==='posted'?'tag-green':c.status==='approved'?'tag-purple':'tag-yellow'}">${c.status||'draft'}</span>
         <div style="font-size:9px;color:#3a3a50;margin-top:4px">${(c.added_at||'').slice(0,10)}</div>
       </div>`).join('')}</div>
-    <div style="font-size:10px;color:#3a3a50;text-align:center;margin-top:10px">${filtered.length} items · Click for details</div>`;
-}
-
-function showContentDetail(id) {
-  const c = (allData.library||[]).find(x => x.id === id || x.batch_id === id);
-  if(!c) return toast('Not found','#f87171');
-  const caps = c.captions || [];
-  toast(`${c.model||'?'} — ${c.nsfw_level||'sfw'}`);
+    <div style="font-size:10px;color:#3a3a50;text-align:center;margin-top:10px">${filtered.length} items</div>`;
 }
 
 // ══════════════════ TEXT GEN ══════════════════
@@ -618,7 +603,6 @@ async function generateText() {
       <div style="font-size:12px;color:#d4d4d8;margin:4px 0">${t.text}</div>
       <div style="display:flex;gap:4px">
         <button class="btn btn-xs btn-ghost" onclick="copyText(this.previousElementSibling.textContent)">Copy</button>
-        <button class="btn btn-xs btn-ghost" onclick="toast('Edit in text editor')">Edit</button>
       </div>
     </div>`).join('')
     : '<div style="color:#f87171;font-size:12px;padding:12px">Generation failed</div>';
@@ -1348,13 +1332,13 @@ function renderSettingsTab(tab) {
         <div class="f-group" style="margin-bottom:8px"><label>Platforms to sync</label><div style="display:flex;flex-wrap:wrap;gap:8px">
           ${(accts.platforms||['X','Telegram','Reddit','IG']).map(p => `<span class="tag tag-purple">${p}</span>`).join('')}
         </div></div>
-        <button class="btn btn-primary btn-sm" onclick="toast('Settings saved')">Save</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettingsAccounts()">Save</button>
       </div>`,
 
       keys: `<div class="card">
         <div class="card-title">API keys</div>
-        <div class="f-group" style="margin-bottom:8px"><label>Fal.ai</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="••••••••" style="flex:1" disabled><button class="btn btn-xs btn-ghost">Test</button></div></div>
-        <div class="f-group" style="margin-bottom:8px"><label>Replicate</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="••••••••" style="flex:1" disabled><button class="btn btn-xs btn-ghost">Test</button></div></div>
+        <div class="f-group" style="margin-bottom:8px"><label>Fal.ai</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="••••••••" style="flex:1" disabled></div></div>
+        <div class="f-group" style="margin-bottom:8px"><label>Replicate</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="••••••••" style="flex:1" disabled></div></div>
         <div class="f-group"><label>S3 / Cloud storage</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="Not configured" style="flex:1" disabled></div></div>
         <div style="font-size:10px;color:#3a3a50;margin-top:10px">Keys stored in Railway env vars</div>
       </div>`,
@@ -1419,23 +1403,30 @@ function renderSettingsTab(tab) {
       <button class="btn btn-primary btn-sm" onclick="saveRunpodGen()">Save Gen Params</button>
     </div>`,
     data: `<div class="card">
-          <div class="card-title">Data management</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-            <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export Models</button>
-            <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export Revenue</button>
-            <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export Content</button>
-            <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export All</button>
-          </div>
-          <div style="padding:12px;background:#0f0f1a;border:1px solid #1f1f2e;border-radius:8px;margin-top:8px">
-            <div style="font-size:12px;color:#f87171;font-weight:500">⚠ Danger zone</div>
-            <div style="font-size:11px;color:#6b6b80;margin:6px 0">These actions cannot be undone.</div>
-            <button class="btn btn-sm btn-red" onclick="if(confirm('Delete ALL data?')) toast('Data cleared')">Delete All Data</button>
-          </div>
-        </div>`
+              <div class="card-title">Data management</div>
+              <div style="padding:12px;background:#0f0f1a;border:1px solid #1f1f2e;border-radius:8px;margin-top:8px">
+                <div style="font-size:12px;color:#f87171;font-weight:500">⚠ Danger zone</div>
+                <div style="font-size:11px;color:#6b6b80;margin:6px 0">These actions cannot be undone.</div>
+                <button class="btn btn-sm btn-red" onclick="if(confirm('Delete ALL models, revenue, accounts, and content?')) deleteAllData()">Delete All Data</button>
+              </div>
+            </div>`
       };
 
       $('settingsContent').innerHTML = content[tab] || '<div>Unknown tab</div>';
     }
+
+async function saveSettingsAccounts() {
+  await postAPI('/api/settings/update', {accounts: {
+    cron_schedule: $('stgCron').value,
+  }});
+  toast('Account settings saved');
+}
+
+async function deleteAllData() {
+  const r = await postAPI('/api/data/clear', {});
+  if(r.ok) { toast('All data cleared'); load(); }
+  else { toast('Failed to clear','#f87171'); }
+}
 
 async function saveRunpodConfig() {
   const enabled = $('rpEnabled').checked;

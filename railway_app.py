@@ -1149,6 +1149,20 @@ def runpod_status(job_id: str):
 def get_status():
     return {"ok":True,"version":"2.0","uptime":"live"}
 
+# ── CLEAR ALL DATA ──
+@app.post("/api/data/clear")
+def clear_all_data():
+    """Delete all dashboard data from Volume."""
+    DATA_DIR = get_data_dir()
+    for f in ["dashboard_db.json", "lora_versions.json", "content_batches.json", "content_library.json",
+              "dataset_images.json", "datasets.json", "settings.json", "vault.json", "social_monitor.json"]:
+        p = DATA_DIR / f
+        if p.exists(): p.unlink()
+    MEMORY.clear()
+    MEMORY.setdefault("models", DEFAULT_MODELS)
+    save_data_file("dashboard_db.json", MEMORY)
+    return {"ok":True}
+
 # ── ROOT ──
 @app.get("/", response_class=HTMLResponse)
 def index():
