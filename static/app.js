@@ -4,6 +4,14 @@ let allData = {};
 let selectedModel = null;  // For model detail view
 const $ = id => document.getElementById(id);
 
+// Cache: don't re-fetch all data on every nav click
+let dataCache = null;
+let cacheAge = 0;
+const CACHE_TTL = 30000; // 30 seconds
+
+// Track first load for longer timeout
+let isFirstLoad = true;
+
 function toast(msg, color='#34d399') {
   const t = $('toast');
   t.textContent = msg; t.style.color = color;
@@ -24,7 +32,7 @@ function switchPage(p) {
 
 function closeModal(id) { $(id).style.display = 'none'; }
 
-async function fetchAPI(path, timeoutMs=5000) {
+async function fetchAPI(path, timeoutMs=12000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -33,6 +41,7 @@ async function fetchAPI(path, timeoutMs=5000) {
     return await r.json();
   } catch(e) {
     clearTimeout(timer);
+    console.warn(`[API] ${path} failed:`, e.message);
     return {};
   }
 }
@@ -45,11 +54,44 @@ async function postAPI(path, data, timeoutMs=8000) {
     return await r.json();
   } catch(e) {
     clearTimeout(timer);
+    console.warn(`[API POST] ${path} failed:`, e.message);
     return {};
   }
 }
 
-async function load() { loadPage(PAGE); }
+async function load() {
+  const now = Date.now();
+  // Use cached data if fresh
+  if (now - cacheAge < CACHE_TTL && dataCache) {
+    allData = dataCache;
+    renderPage();
+    return;
+  }
+  // Show loading overlay
+  const overlay = $('loadingOverlay');
+  if(overlay) overlay.style.display = 'flex';
+  await loadPage(PAGE);
+  // Cache result + hide overlay
+  dataCache = allData;
+  cacheAge = now;
+  isFirstLoad = false;
+  if(overlay) overlay.style.display = 'none';
+}
+
+function renderPage() {
+  const page = PAGE;
+  if(page==='dashboard') renderDashboard();
+  else if(page==='models') renderModels();
+  else if(page==='pipeline') renderPipeline();
+  else if(page==='content') renderContentLib();
+  else if(page==='dataset') renderDataset();
+  else if(page==='textgen') renderTextGen();
+  else if(page==='lora') renderLora();
+  else if(page==='revenue') renderRevenue();
+  else if(page==='accounts') renderAccounts();
+  else if(page==='settings') renderSettings();
+}
+
 async function loadPage(page) {
   const [analytics, models, accounts, revenue, captions, hub, dashboard, loras, batches, library, settings, dataset, vault, social, datasets] = await Promise.all([
     fetchAPI('/api/analytics'),
@@ -87,16 +129,6 @@ async function loadPage(page) {
     social: asArray(social),
     datasets: asArray(datasets),
   };
-  if(page==='dashboard') renderDashboard();
-  else if(page==='models') renderModels();
-  else if(page==='pipeline') renderPipeline();
-  else if(page==='content') renderContentLib();
-  else if(page==='dataset') renderDataset();
-  else if(page==='textgen') renderTextGen();
-  else if(page==='lora') renderLora();
-  else if(page==='revenue') renderRevenue();
-  else if(page==='accounts') renderAccounts();
-  else if(page==='settings') renderSettings();
 }
 
 // ══════════════════ DASHBOARD ══════════════════
@@ -566,7 +598,7 @@ function showTrainLora(model, type) {
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('tlModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
-  } catch(e) {}
+  } catch(e) { console.warn(e); }
   if(type) $('tlType').value = type;
   
   // Populate dataset selector
@@ -590,7 +622,7 @@ function showTrainLora(model, type) {
         }).join('');
       if(datasets.length === 0) dsSel.innerHTML = '<option value="">No datasets available</option>';
     }
-  } catch(e) {}
+  } catch(e) { console.warn(e); }
 }
 
 function loadDatasetForTraining() {
@@ -603,31 +635,6 @@ function loadDatasetForTraining() {
     selectedDsImages = [];
     $('tlImagesInfo').textContent = '0 selected';
   }
-}
-
-async function saveTrainLora() {
-  const model = $('tlModel').value;
-  const type = $('tlType').value;
-  const source = $('tlSource').value;
-  const images = parseInt($('tlImages').value) || 120;
-  const loss = parseFloat($('tlLoss').value) || 0.08;
-  const trigger = $('tlTrigger').value;
-  const steps = parseInt($('tlSteps').value) || 1500;
-  const lr = parseFloat($('tlLr').value) || 0.0001;
-
-  // Find current version
-  const existing = (allData.loras||[]).filter(l => l.model_id === model && l.type === type);
-  const version = existing.length > 0 ? Math.max(...existing.map(l => l.version||0)) + 1 : 1;
-
-  const r = await postAPI('/api/lora/versions/add', {
-    model_id: model, version, type, source, images_trained: images,
-    loss, trigger_word: trigger, steps, lr, base_model: 'sd_xl_base_1.0'
-  });
-  closeModal('trainLoraModal');
-  toast(`LoRA v${version} saved`);
-  // Also mark model lora as trained
-  await postAPI('/api/models/update', {name: model, lora: 'trained'});
-  load();
 }
 
 // ══════════════════ REVENUE ══════════════════
@@ -678,7 +685,7 @@ function showAddRevenue() {
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('arModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
-  } catch(e) { /* models not loaded yet */ }
+  } catch(e) { console.warn('showAddRevenue:', e); }
 }
 
 async function saveRevenue() {
@@ -695,61 +702,6 @@ async function deleteRev(idx) {
   load();
 }
 
-// ══════════════════ ACCOUNTS ══════════════════
-function renderAccounts() {
-  const models = allData.models || [];
-  const accts = allData.accounts || [];
-  const mf = $('acctModelFilter'), pf = $('acctPlatFilter');
-  if(mf) mf.innerHTML = '<option value="all">All models</option>' + models.map(m => `<option>${m.name}</option>`).join('');
-  const mfVal = mf ? mf.value : 'all';
-  const pfVal = pf ? pf.value : 'all';
-
-  $('accountsList').innerHTML = models.filter(m => mfVal === 'all' || m.name === mfVal).map(m => {
-    const modelAccts = accts.filter(a => a.model === m.name).filter(a => pfVal === 'all' || a.platform === pfVal);
-    const platforms = [...new Set(modelAccts.map(a => a.platform))];
-    return `<div class="card">
-      <div class="card-title"><span>${m.name} — ${m.followers||0} followers</span></div>
-      ${platforms.length === 0 ? '<div style="font-size:12px;color:#6b6b80;padding:6px 0">No accounts for this filter</div>' :
-        platforms.map(p => {
-          const acct = modelAccts.find(a => a.platform === p) || {};
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #0f0f1a;flex-wrap:wrap;gap:6px">
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:13px;color:#d4d4d8">${p}</span>
-              <span class="tag ${acct.status==='active'?'tag-green':acct.status==='warmup'?'tag-yellow':'tag-red'}">${acct.status||'uncreated'}</span>
-              <span style="font-size:11px;color:#6b6b80">${acct.username||''} · ${acct.followers||0} flwrs</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div class="bar" style="width:60px;height:4px;display:inline-block">
-                <div class="bar-fill" style="width:${acct.warmup||0}%"></div>
-              </div>
-              <span style="font-size:10px;color:#6b6b80">${acct.warmup||0}%</span>
-              <button class="btn btn-xs btn-ghost" onclick="editAcct('${m.name}','${p}')">Edit</button>
-              <button class="btn btn-xs btn-ghost" onclick="toast('Sync triggered')">Sync</button>
-            </div>
-          </div>`;
-        }).join('')}
-    </div>`;
-  }).join('');
-
-  $('acctCronInfo').innerHTML = `
-    <div style="font-size:12px;color:#a1a1aa;display:flex;gap:16px;flex-wrap:wrap">
-      <span>Schedule: every 2h</span>
-      <span>Last run: ${allData.dashboard?.account_sync?.last_sync||'N/A'}</span>
-      <span>Status: ${allData.dashboard?.account_sync?.status||'idle'}</span>
-    </div>`;
-}
-
-function editAcct(model, platform) {
-  const a = (allData.accounts||[]).find(x => x.model === model && x.platform === platform) || {};
-  const status = prompt('Status:', a.status || 'uncreated'); if(!status) return;
-  const warmup = parseInt(prompt('Warmup %:', a.warmup || 0)) || 0;
-  const followers = parseInt(prompt('Followers:', a.followers || 0)) || 0;
-  const username = prompt('Username:', a.username || '') || '';
-  postAPI('/api/accounts/update', {model, platform, status, warmup, followers, username});
-  toast('Account updated');
-  load();
-}
-
 // ══════════════════ SETTINGS ══════════════════
 let currentSettingsTab = 'general';
 
@@ -763,73 +715,6 @@ function renderSettings() {
   switchSettingsTab(currentSettingsTab);
 }
 
-function renderSettingsTab(tab) {
-  const s = allData.settings || {};
-  const gen = s.general || {};
-  const train = s.training || {};
-  const accts = s.accounts || {};
-
-  const content = {
-    general: `<div class="card">
-      <div class="card-title">General</div>
-      <div class="f-row" style="margin-bottom:8px">
-        <div class="f-group"><label>Currency</label><select class="f-control f-control-sm" id="stgCurrency"><option ${gen.currency==='USD'?'selected':''}>USD</option><option ${gen.currency==='EUR'?'selected':''}>EUR</option></select></div>
-        <div class="f-group"><label>Timezone</label><select class="f-control f-control-sm" id="stgTimezone"><option ${(gen.timezone||'UTC+0')==='UTC+0'?'selected':''}>UTC+0</option><option>UTC-5</option></select></div>
-        <div class="f-group"><label>Default NSFW</label><select class="f-control f-control-sm" id="stgDefaultNsfw"><option ${(gen.default_nsfw||'SFW')==='SFW'?'selected':''}>SFW</option><option>Mild</option></select></div>
-      </div>
-      <div class="f-row" style="margin-bottom:8px">
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${gen.auto_approve_sfw?'checked':''} id="stgAutoApprove"> Auto-approve SFW</label>
-        <label style="font-size:12px;color:#a1a1aa;display:flex;align-items:center;gap:4px"><input type="checkbox" ${gen.manual_review_nsfw?'checked':''} id="stgManualNsfw"> Manual review NSFW</label>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="saveSettingsGeneral()">Save</button>
-    </div>
-    <div style="font-size:10px;color:#3a3a50;margin-top:8px">Drive: ${s._drive_status||'memory_only'}</div>`,
-
-    training: `<div class="card">
-      <div class="card-title">Training defaults</div>
-      <div class="f-row" style="margin-bottom:8px">
-        <div class="f-group"><label>Base model</label><input class="f-control f-control-sm" id="stgBaseModel" value="${train.base_model||'sd_xl_base_1.0'}" style="width:160px"></div>
-        <div class="f-group"><label>Steps</label><input class="f-control f-control-sm" id="stgSteps" type="number" value="${train.default_steps||1500}" style="width:60px"></div>
-        <div class="f-group"><label>LR</label><input class="f-control f-control-sm" id="stgLr" value="${train.default_lr||0.0001}" style="width:70px"></div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="saveSettingsTraining()">Save</button>
-    </div>`,
-
-    accounts: `<div class="card">
-      <div class="card-title">Account sync</div>
-      <div class="f-group" style="margin-bottom:8px"><label>Cron schedule</label><select class="f-control f-control-sm" id="stgCron"><option ${(accts.cron_schedule||'every 2h')==='every 2h'?'selected':''}>every 2h</option><option>every 4h</option><option>every 6h</option></select></div>
-      <div class="f-group" style="margin-bottom:8px"><label>Platforms to sync</label><div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${(accts.platforms||['X','Telegram','Reddit','IG']).map(p => `<span class="tag tag-purple">${p}</span>`).join('')}
-      </div></div>
-      <button class="btn btn-primary btn-sm" onclick="toast('Settings saved')">Save</button>
-    </div>`,
-
-    keys: `<div class="card">
-      <div class="card-title">API keys</div>
-      <div class="f-group" style="margin-bottom:8px"><label>Fal.ai</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="••••••••" style="flex:1" disabled><button class="btn btn-xs btn-ghost">Test</button></div></div>
-      <div class="f-group" style="margin-bottom:8px"><label>Replicate</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="••••••••" style="flex:1" disabled><button class="btn btn-xs btn-ghost">Test</button></div></div>
-      <div class="f-group"><label>S3 / Cloud storage</label><div style="display:flex;gap:6px"><input class="f-control f-control-sm" value="Not configured" style="flex:1" disabled></div></div>
-      <div style="font-size:10px;color:#3a3a50;margin-top:10px">Keys stored in Railway env vars</div>
-    </div>`,
-
-    data: `<div class="card">
-      <div class="card-title">Data management</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export Models</button>
-        <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export Revenue</button>
-        <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export Content</button>
-        <button class="btn btn-sm btn-ghost" onclick="toast('Export started')">Export All</button>
-      </div>
-      <div style="padding:12px;background:#0f0f1a;border:1px solid #1f1f2e;border-radius:8px;margin-top:8px">
-        <div style="font-size:12px;color:#f87171;font-weight:500">⚠ Danger zone</div>
-        <div style="font-size:11px;color:#6b6b80;margin:6px 0">These actions cannot be undone.</div>
-        <button class="btn btn-sm btn-red" onclick="if(confirm('Delete ALL data?')) toast('Data cleared')">Delete All Data</button>
-      </div>
-    </div>`
-  };
-
-  $('settingsContent').innerHTML = content[tab] || '<div>Unknown tab</div>';
-}
 
 async function saveSettingsGeneral() {
   const data = {
@@ -859,7 +744,7 @@ function showGenModal(model) {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('gmModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
     if(model) updateGmLoras(model);
-  } catch(e) {}
+  } catch(e) { console.warn(e); }
 }
 
 // Safe event listener - guarded against null
@@ -1123,7 +1008,7 @@ function showCreateDataset() {
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('cdModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
-  } catch(e) {}
+  } catch(e) { console.warn(e); }
 }
 
 async function saveCreateDataset() {
@@ -1248,7 +1133,7 @@ function showVaultModal() {
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('vModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
-  } catch(e) {}
+  } catch(e) { console.warn(e); }
 }
 
 async function saveVaultEntry() {
@@ -1270,7 +1155,7 @@ function showSocialModal() {
   try {
     const models = Array.isArray(allData.models) ? allData.models : [];
     $('sModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
-  } catch(e) {}
+  } catch(e) { console.warn(e); }
 }
 
 async function saveSocialEntry() {
