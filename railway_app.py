@@ -217,7 +217,13 @@ def update_model(data: dict):
         if m["name"] == data.get("name"):
             models[i].update({k:v for k,v in data.items() if k != "name"})
             save_data(d); return {"ok":True}
-    models.append({"name":data["name"],"persona":"","age":"","ethnicity":"","location":"","style":"SFW","status":"setup","revenue":0,"images":0,"followers":0,"fans":0,"platforms":["X"]})
+    # New model — include all provided fields
+    new = {"name": data.get("name",""), "persona": data.get("persona",""), "age": data.get("age",""),
+           "ethnicity": data.get("ethnicity",""), "location": data.get("location",""), "style": data.get("style","SFW"),
+           "status": data.get("status","setup"), "revenue": data.get("revenue",0), "images": data.get("images",0),
+           "followers": data.get("followers",0), "fans": data.get("fans",0),
+           "platforms": data.get("platforms", ["X"]), "kinks": data.get("kinks","")}
+    models.append(new)
     save_data(d); return {"ok":True}
 
 @app.post("/api/models/delete")
