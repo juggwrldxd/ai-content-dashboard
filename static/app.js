@@ -562,29 +562,35 @@ async function deleteLora(id) {
 }
 
 function showTrainLora(model, type) {
-  const models = allData.models || [];
-  $('tlModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
+  $('trainLoraModal').style.display = 'flex';
+  try {
+    const models = Array.isArray(allData.models) ? allData.models : [];
+    $('tlModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
+  } catch(e) {}
   if(type) $('tlType').value = type;
   
   // Populate dataset selector
-  const images = allData.dataset || [];
-  const dsSel = $('tlDatasetSelect');
-  if(dsSel) {
-    const byModel = {};
-    images.forEach(i => {
-      if(i.status === 'new' || i.status === 'used') {
-        const key = `${i.model} - ${i.type.toUpperCase()} (${i.status})`;
-        if(!byModel[key]) byModel[key] = [];
-        byModel[key].push(i.id);
-      }
-    });
-    dsSel.innerHTML = '<option value="">— Select saved dataset —</option>' +
-      Object.entries(byModel).map(([key, ids]) =>
-        `<option value="${ids.join(',')}">${key} — ${ids.length} images</option>`
-      ).join('');
-  }
-  
-  $('trainLoraModal').style.display = 'flex';
+  try {
+    const images = Array.isArray(allData.dataset) ? allData.dataset : [];
+    const dsSel = $('tlDatasetSelect');
+    if(dsSel) {
+      // Group images by model+type
+      const byDs = {};
+      images.forEach(i => {
+        if(i.dataset_id) {
+          if(!byDs[i.dataset_id]) byDs[i.dataset_id] = [];
+          byDs[i.dataset_id].push(i.id);
+        }
+      });
+      const datasets = Array.isArray(allData.datasets) ? allData.datasets : [];
+      dsSel.innerHTML = '<option value="">— Select dataset —</option>' +
+        datasets.map(d => {
+          const ids = (byDs[d.id] || []).join(',');
+          return `<option value="${ids}">${d.name} (${d.model} ${d.type}) — ${byDs[d.id] ? byDs[d.id].length : 0} images</option>`;
+        }).join('');
+      if(datasets.length === 0) dsSel.innerHTML = '<option value="">No datasets available</option>';
+    }
+  } catch(e) {}
 }
 
 function loadDatasetForTraining() {
@@ -667,9 +673,12 @@ function renderRevenue() {
 }
 
 function showAddRevenue() {
-  const models = allData.models || [];
-  $('arModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
   $('addRevModal').style.display = 'flex';
+  // Populate model selector (safe)
+  try {
+    const models = Array.isArray(allData.models) ? allData.models : [];
+    $('arModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
+  } catch(e) { /* models not loaded yet */ }
 }
 
 async function saveRevenue() {
@@ -845,15 +854,21 @@ async function saveSettingsTraining() {
 
 // ══════════════════ GENERATE MODAL ══════════════════
 function showGenModal(model) {
-  const models = allData.models || [];
-  $('gmModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
-  if(model) updateGmLoras(model);
   $('genModal').style.display = 'flex';
+  try {
+    const models = Array.isArray(allData.models) ? allData.models : [];
+    $('gmModel').innerHTML = models.map(m => `<option ${m.name===model?'selected':''}>${m.name}</option>`).join('');
+    if(model) updateGmLoras(model);
+  } catch(e) {}
 }
 
-$('gmModel').addEventListener('change', function() {
-  updateGmLoras(this.value);
-});
+// Safe event listener - guarded against null
+const gmModel = $('gmModel');
+if(gmModel) {
+  gmModel.addEventListener('change', function() {
+    updateGmLoras(this.value);
+  });
+}
 
 async function saveGenerateBatch() {
   const model = $('gmModel').value;
@@ -1104,9 +1119,11 @@ async function trainFromSelected() {
 
 // ══════════════════ NAMED DATASETS ══════════════════
 function showCreateDataset() {
-  const models = allData.models || [];
-  $('cdModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
   $('createDatasetModal').style.display = 'flex';
+  try {
+    const models = Array.isArray(allData.models) ? allData.models : [];
+    $('cdModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
+  } catch(e) {}
 }
 
 async function saveCreateDataset() {
@@ -1227,9 +1244,11 @@ async function saveModelEdit() {
 
 // ══════════════════ VAULT ══════════════════
 function showVaultModal() {
-  const models = allData.models || [];
-  $('vModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
   $('vaultModal').style.display = 'flex';
+  try {
+    const models = Array.isArray(allData.models) ? allData.models : [];
+    $('vModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
+  } catch(e) {}
 }
 
 async function saveVaultEntry() {
@@ -1247,9 +1266,11 @@ async function saveVaultEntry() {
 
 // ══════════════════ SOCIAL MONITOR ══════════════════
 function showSocialModal() {
-  const models = allData.models || [];
-  $('sModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
   $('socialModal').style.display = 'flex';
+  try {
+    const models = Array.isArray(allData.models) ? allData.models : [];
+    $('sModel').innerHTML = models.map(m => `<option>${m.name}</option>`).join('');
+  } catch(e) {}
 }
 
 async function saveSocialEntry() {
